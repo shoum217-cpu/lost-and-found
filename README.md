@@ -13,7 +13,8 @@ Report, discover, and return lost belongings on campus.
 | Styling | Tailwind CSS v4 |
 | Routing | React Router v7 |
 | Icons | Lucide React |
-| Backend (planned) | Supabase (Auth, PostgreSQL, Storage) |
+| Backend | Node.js + Express |
+| Database | MongoDB (Mongoose) |
 
 ---
 
@@ -28,27 +29,45 @@ cd refound
 
 ### 2. Install dependencies
 
+Frontend:
 ```bash
+npm install
+```
+
+Backend:
+```bash
+cd server
 npm install
 ```
 
 ### 3. Set up environment variables
 
+Frontend:
 ```bash
 cp .env.example .env
 ```
+Edit `.env` and add: `VITE_API_URL=http://localhost:5000/api`
 
-Edit `.env` and fill in your Supabase credentials:
-```
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
-```
-
-> **Note:** The app runs without Supabase credentials (uses mock data). A warning will appear in the console.
-
-### 4. Start the dev server
-
+Backend:
 ```bash
+cd server
+cp .env.example .env
+```
+Edit `.env` and add your `MONGO_URI`.
+
+> **Note:** The app currently runs using mock data on the frontend while the backend API is being built.
+
+### 4. Start the dev servers
+
+Frontend:
+```bash
+# In the root directory
+npm run dev
+```
+
+Backend:
+```bash
+# In the server/ directory
 npm run dev
 ```
 
@@ -63,13 +82,20 @@ src/
 ├── components/       # Reusable UI components (Navbar, ItemCard, etc.)
 ├── pages/            # One file per route
 ├── layouts/          # Page layouts (MainLayout wraps Navbar + Footer)
-├── lib/              # Supabase client config
 ├── services/         # API/data functions (authService, itemService)
 ├── data/             # Mock data for development
 ├── hooks/            # Custom React hooks (to be built)
 ├── App.jsx           # Router setup
 ├── main.jsx          # React entry point
 └── index.css         # Tailwind + global styles
+
+server/
+├── config/           # DB connection
+├── controllers/      # Route logic
+├── models/           # Mongoose schemas
+├── routes/           # Express routes
+├── middleware/       # Custom middleware (Auth, etc.)
+└── server.js         # Entry point
 ```
 
 ## Routes
@@ -86,25 +112,22 @@ src/
 
 ---
 
-## Supabase Integration (Next Steps)
+## Backend Integration (Next Steps)
 
-The project is structured and ready for Supabase. To activate:
+The project is structured and ready for MongoDB Atlas. To activate:
 
-1. **Create a Supabase project** at [supabase.com](https://supabase.com)
-2. **Add credentials** to your `.env` file
-3. **Create the `items` table** in Supabase with columns matching `src/data/mockItems.js`
-4. **Enable Row Level Security (RLS)** on the `items` table
-5. **Uncomment** the Supabase query code in `src/services/itemService.js`
-6. **Implement auth** in `src/services/authService.js`
+1. **Create a MongoDB Atlas cluster**
+2. **Add connection string** to `server/.env` as `MONGO_URI`
+3. **Finish implementations** in `server/controllers`
+4. **Uncomment API fetch calls** in `src/services`
 
 ---
 
 ## Development Notes
 
 - Mock data lives in `src/data/mockItems.js` — safe to modify for testing
-- All services have commented-out Supabase equivalents ready to activate
+- All services have commented-out `fetch` API equivalents ready to activate
 - Auth pages (Login, Register) use a separate minimal layout
-- Image upload will use **Supabase Storage** (bucket: `item-images`)
 
 ---
 

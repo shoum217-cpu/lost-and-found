@@ -1,25 +1,15 @@
 /**
  * itemService.js – CRUD operations for Lost & Found items.
  *
- * Currently returns mock data. When Supabase is connected, replace
- * the mock returns with real database queries.
+ * Currently returns mock data. Once the backend is connected, replace
+ * the mock returns with real database queries via fetch.
  *
- * Future Supabase table: `items`
- *   - id (uuid, primary key)
- *   - user_id (uuid, references auth.users)
- *   - type ('found' | 'lost')
- *   - title (text)
- *   - category (text)
- *   - description (text)
- *   - location (text)
- *   - date (date)
- *   - status ('open' | 'claimed' | 'returned')
- *   - image_url (text, nullable)
- *   - created_at (timestamptz)
+ * Future MongoDB collection: `items`
  */
 
 import { mockItems } from '../data/mockItems'
-// import { supabase } from '../lib/supabase'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 /**
  * Fetch all items. Optionally filter by type and/or search query.
@@ -48,14 +38,11 @@ export async function getItems(filters = {}) {
 
   return results
 
-  // --- Future Supabase implementation ---
-  // let query = supabase.from('items').select('*').order('created_at', { ascending: false })
-  // if (filters.type && filters.type !== 'all') query = query.eq('type', filters.type)
-  // if (filters.category && filters.category !== 'All') query = query.eq('category', filters.category)
-  // if (filters.query) query = query.ilike('title', `%${filters.query}%`)
-  // const { data, error } = await query
-  // if (error) throw error
-  // return data
+  // --- Future API implementation ---
+  // const queryParams = new URLSearchParams(filters).toString();
+  // const res = await fetch(`${API_URL}/items?${queryParams}`);
+  // if (!res.ok) throw new Error('Failed to fetch items');
+  // return res.json();
 }
 
 /**
@@ -67,10 +54,10 @@ export async function getItemById(id) {
   // --- Mock implementation ---
   return mockItems.find(item => item.id === id) ?? null
 
-  // --- Future Supabase implementation ---
-  // const { data, error } = await supabase.from('items').select('*').eq('id', id).single()
-  // if (error) throw error
-  // return data
+  // --- Future API implementation ---
+  // const res = await fetch(`${API_URL}/items/${id}`);
+  // if (!res.ok) throw new Error('Failed to fetch item');
+  // return res.json();
 }
 
 /**
@@ -79,7 +66,7 @@ export async function getItemById(id) {
  * @returns {Promise<Object>}
  */
 export async function createItem(itemData) {
-  // TODO: implement with supabase.from('items').insert(itemData)
+  // TODO: implement with fetch(`${API_URL}/items`, { method: 'POST', body: JSON.stringify(itemData), ... })
   console.log('createItem called (stub)', itemData)
   throw new Error('Item creation not yet implemented.')
 }
@@ -91,7 +78,7 @@ export async function createItem(itemData) {
  * @returns {Promise<Object>}
  */
 export async function updateItemStatus(id, status) {
-  // TODO: implement with supabase.from('items').update({ status }).eq('id', id)
+  // TODO: implement with fetch(`${API_URL}/items/${id}`, { method: 'PUT', body: JSON.stringify({ status }), ... })
   console.log('updateItemStatus called (stub)', { id, status })
   throw new Error('Item update not yet implemented.')
 }

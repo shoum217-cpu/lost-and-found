@@ -15,7 +15,6 @@
     "vite": "^8.2.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.112.3",
     "lucide-react": "^1.31.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
