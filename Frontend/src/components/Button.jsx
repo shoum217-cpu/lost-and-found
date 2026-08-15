@@ -13,11 +13,11 @@ const variants = {
   primary:
     'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm',
   secondary:
-    'bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-200',
+    'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/50 active:bg-blue-200 dark:active:bg-blue-800',
   outline:
-    'border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100',
+    'border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800 active:bg-gray-100 dark:active:bg-neutral-700',
   ghost:
-    'text-gray-600 hover:bg-gray-100 active:bg-gray-200',
+    'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800 active:bg-gray-200 dark:active:bg-neutral-700',
 }
 
 const sizes = {

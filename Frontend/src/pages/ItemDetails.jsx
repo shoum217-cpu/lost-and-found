@@ -55,14 +55,14 @@ export default function ItemDetails() {
       {/* Back link */}
       <Link
         to="/search"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 mb-6 transition-colors"
       >
         <ArrowLeft size={15} aria-hidden="true" /> Back to Search
       </Link>
 
-      <article className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <article className="bg-white dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm overflow-hidden transition-colors">
         {/* Image */}
-        <div className="aspect-video bg-gray-100 overflow-hidden">
+        <div className="aspect-video bg-gray-100 dark:bg-neutral-700 overflow-hidden transition-colors">
           <img
             src={item.imageUrl}
             alt={item.title}
@@ -76,48 +76,48 @@ export default function ItemDetails() {
             <div>
               <span
                 className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full mb-2 ${
-                  isFound ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                  isFound ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                 }`}
               >
                 {isFound ? 'Found Item' : 'Lost Item'}
               </span>
-              <h1 className="text-xl font-bold text-gray-900">{item.title}</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{item.title}</h1>
             </div>
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 capitalize border border-gray-200">
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-300 capitalize border border-gray-200 dark:border-neutral-600 transition-colors">
               {item.status}
             </span>
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 leading-relaxed">{item.description}</p>
+          <p className="text-sm text-gray-600 dark:text-neutral-300 leading-relaxed">{item.description}</p>
 
           {/* Meta */}
-          <ul className="flex flex-col gap-2.5 text-sm text-gray-600">
+          <ul className="flex flex-col gap-2.5 text-sm text-gray-600 dark:text-neutral-300">
             <li className="flex items-center gap-2.5">
               <Tag size={15} className="text-gray-400 shrink-0" aria-hidden="true" />
-              <span className="font-medium text-gray-700">Category:</span> {item.category}
+              <span className="font-medium text-gray-700 dark:text-neutral-200">Category:</span> {item.category}
             </li>
             <li className="flex items-center gap-2.5">
               <MapPin size={15} className="text-gray-400 shrink-0" aria-hidden="true" />
-              <span className="font-medium text-gray-700">Location:</span> {item.location}
+              <span className="font-medium text-gray-700 dark:text-neutral-200">Location:</span> {item.location}
             </li>
             <li className="flex items-center gap-2.5">
               <Calendar size={15} className="text-gray-400 shrink-0" aria-hidden="true" />
-              <span className="font-medium text-gray-700">Date:</span> {formattedDate}
+              <span className="font-medium text-gray-700 dark:text-neutral-200">Date:</span> {formattedDate}
             </li>
             <li className="flex items-center gap-2.5">
               <User size={15} className="text-gray-400 shrink-0" aria-hidden="true" />
-              <span className="font-medium text-gray-700">Reported by:</span> {item.reportedBy}
+              <span className="font-medium text-gray-700 dark:text-neutral-200">Reported by:</span> {item.reportedBy}
             </li>
           </ul>
 
           {/* Claim section – placeholder for now */}
           {item.status === 'open' && (
-            <div className="border-t border-gray-100 pt-6">
-              <h2 className="text-sm font-semibold text-gray-900 mb-2">
+            <div className="border-t border-gray-100 dark:border-neutral-700 pt-6 transition-colors">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                 {isFound ? 'Is this yours?' : 'Did you find this?'}
               </h2>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4">
                 {isFound
                   ? 'If this item belongs to you, submit a claim and we\'ll connect you with the finder.'
                   : 'If you found this item, let the owner know by contacting the reporter.'}
@@ -129,7 +129,7 @@ export default function ItemDetails() {
               >
                 {isFound ? 'Submit a Claim' : 'Contact Reporter'}
               </button>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 dark:text-neutral-500 mt-2">
                 You'll need to log in to submit a claim. (Coming soon)
               </p>
             </div>

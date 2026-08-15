@@ -34,7 +34,7 @@ export default function Home() {
   return (
     <>
       {/* ─────────────────────────────── HERO ─────────────────────────────── */}
-      <section className="bg-white pt-12 pb-16 px-4 sm:px-6">
+      <section className="bg-white dark:bg-neutral-900 pt-12 pb-16 px-4 sm:px-6 transition-colors">
         <div className="max-w-3xl mx-auto text-center">
           {/* Eyebrow label */}
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mb-5">
@@ -43,13 +43,13 @@ export default function Home() {
           </span>
 
           {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight tracking-tight mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight mb-4 transition-colors">
             Lost something?<br />
             <span className="text-blue-600">Let's help you find it.</span>
           </h1>
 
           {/* Supporting text */}
-          <p className="text-base sm:text-lg text-gray-500 mb-8 max-w-xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-500 dark:text-neutral-400 mb-8 max-w-xl mx-auto leading-relaxed transition-colors">
             ReFound helps MIT Bengaluru students report, discover, and
             return lost belongings — quickly and without the hassle.
           </p>
@@ -84,19 +84,19 @@ export default function Home() {
       </section>
 
       {/* ─────────────────────────── QUICK ACTIONS ─────────────────────────── */}
-      <section className="bg-gray-50 py-12 px-4 sm:px-6" aria-labelledby="quick-actions-heading">
+      <section className="bg-gray-50 dark:bg-neutral-900/50 py-12 px-4 sm:px-6 transition-colors" aria-labelledby="quick-actions-heading">
         <div className="max-w-4xl mx-auto">
           <h2 id="quick-actions-heading" className="sr-only">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
             {/* I Lost Something */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 hover:shadow-md transition-shadow duration-200">
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm p-6 flex flex-col gap-4 hover:shadow-md transition-all duration-200">
               <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
                 <AlertCircle size={20} className="text-orange-600" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-1">I Lost Something</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1 transition-colors">I Lost Something</h3>
+                <p className="text-sm text-gray-500 dark:text-neutral-400 leading-relaxed transition-colors">
                   Lost something on campus? Report it here so someone who found it can return it to you.
                 </p>
               </div>
@@ -109,13 +109,13 @@ export default function Home() {
             </div>
 
             {/* I Found Something */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 hover:shadow-md transition-shadow duration-200">
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm p-6 flex flex-col gap-4 hover:shadow-md transition-all duration-200">
               <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                 <CheckCircle size={20} className="text-blue-600" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-1">I Found Something</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1 transition-colors">I Found Something</h3>
+                <p className="text-sm text-gray-500 dark:text-neutral-400 leading-relaxed transition-colors">
                   Found something that doesn't belong to you? Post it here so the owner can claim it back.
                 </p>
               </div>
@@ -135,10 +135,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 id="recent-items-heading" className="text-xl font-bold text-gray-900">
+              <h2 id="recent-items-heading" className="text-xl font-bold text-gray-900 dark:text-white transition-colors">
                 Recently Found Items
               </h2>
-              <p className="text-sm text-gray-500 mt-0.5">Could one of these be yours?</p>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5 transition-colors">Could one of these be yours?</p>
             </div>
             <Link
               to="/search?type=found"
@@ -158,46 +158,46 @@ export default function Home() {
       </section>
 
       {/* ─────────────────────────── HOW IT WORKS ───────────────────────────── */}
-      <section className="bg-gray-50 py-14 px-4 sm:px-6" aria-labelledby="how-it-works-heading">
+      <section className="bg-gray-50 dark:bg-neutral-900/50 py-14 px-4 sm:px-6 transition-colors" aria-labelledby="how-it-works-heading">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 id="how-it-works-heading" className="text-xl font-bold text-gray-900 mb-2">
+          <h2 id="how-it-works-heading" className="text-xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">
             How ReFound Works
           </h2>
-          <p className="text-sm text-gray-500 mb-10">Three simple steps to reunite items with their owners.</p>
+          <p className="text-sm text-gray-500 dark:text-neutral-400 mb-10 transition-colors">Three simple steps to reunite items with their owners.</p>
 
           <ol className="grid grid-cols-1 sm:grid-cols-3 gap-6 list-none">
             {/* Step 1 */}
-            <li className="flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <li className="flex flex-col items-center gap-3 p-6 bg-white dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm transition-colors">
               <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center">
                 <AlertCircle size={22} className="text-white" aria-hidden="true" />
               </div>
               <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Step 1</span>
-              <h3 className="text-base font-semibold text-gray-900">Report</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white transition-colors">Report</h3>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 leading-relaxed transition-colors">
                 Submit a quick report with a photo and description of the item you lost or found.
               </p>
             </li>
 
             {/* Step 2 */}
-            <li className="flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <li className="flex flex-col items-center gap-3 p-6 bg-white dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm transition-colors">
               <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center">
                 <Search size={22} className="text-white" aria-hidden="true" />
               </div>
               <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Step 2</span>
-              <h3 className="text-base font-semibold text-gray-900">Find</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white transition-colors">Find</h3>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 leading-relaxed transition-colors">
                 Browse reports or search by name, category, and location to find a matching item.
               </p>
             </li>
 
             {/* Step 3 */}
-            <li className="flex flex-col items-center gap-3 p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <li className="flex flex-col items-center gap-3 p-6 bg-white dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm transition-colors">
               <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center">
                 <RotateCcw size={22} className="text-white" aria-hidden="true" />
               </div>
               <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Step 3</span>
-              <h3 className="text-base font-semibold text-gray-900">Return</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white transition-colors">Return</h3>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 leading-relaxed transition-colors">
                 Connect with the finder or claimant and arrange to return the item. Mark it as returned.
               </p>
             </li>

@@ -45,8 +45,8 @@ export default function Search() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Search Items</h1>
-        <p className="text-sm text-gray-500">Browse all lost and found reports on campus.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Search Items</h1>
+        <p className="text-sm text-gray-500 dark:text-neutral-400">Browse all lost and found reports on campus.</p>
       </div>
 
       {/* Search + filters */}
@@ -68,7 +68,7 @@ export default function Search() {
                 className={`px-3 py-1.5 text-sm rounded-full font-medium capitalize transition-colors cursor-pointer ${
                   typeFilter === type
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-700'
                 }`}
               >
                 {type === 'all' ? 'All Items' : type}
@@ -80,7 +80,7 @@ export default function Search() {
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            className="text-sm border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-1.5 text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors"
             aria-label="Filter by category"
           >
             {categories.map(cat => (
@@ -92,7 +92,7 @@ export default function Search() {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
             >
               <X size={14} aria-hidden="true" /> Clear filters
             </button>
@@ -102,16 +102,16 @@ export default function Search() {
 
       {/* Results */}
       {isLoading ? (
-        <p className="text-sm text-gray-400 py-10 text-center">Loading...</p>
+        <p className="text-sm text-gray-400 dark:text-neutral-500 py-10 text-center">Loading...</p>
       ) : items.length === 0 ? (
         <div className="text-center py-16">
-          <SlidersHorizontal size={32} className="mx-auto text-gray-300 mb-3" aria-hidden="true" />
-          <p className="text-gray-500 font-medium">No items match your search.</p>
-          <p className="text-sm text-gray-400 mt-1">Try adjusting your filters.</p>
+          <SlidersHorizontal size={32} className="mx-auto text-gray-300 dark:text-neutral-700 mb-3" aria-hidden="true" />
+          <p className="text-gray-500 dark:text-neutral-400 font-medium">No items match your search.</p>
+          <p className="text-sm text-gray-400 dark:text-neutral-500 mt-1">Try adjusting your filters.</p>
         </div>
       ) : (
         <>
-          <p className="text-sm text-gray-400 mb-4">
+          <p className="text-sm text-gray-400 dark:text-neutral-500 mb-4">
             {items.length} item{items.length !== 1 ? 's' : ''} found
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
