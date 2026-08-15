@@ -62,7 +62,7 @@ export default function Register() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-neutral-300">College Email</label>
+                <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-neutral-300">Email ID</label>
                 <input
                   id="email"
                   name="email"
@@ -71,7 +71,7 @@ export default function Register() {
                   autoComplete="email"
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="you@mitblr.edu.in"
+                  placeholder="you@gmail.com"
                   className="text-sm border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2.5 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 />
               </div>

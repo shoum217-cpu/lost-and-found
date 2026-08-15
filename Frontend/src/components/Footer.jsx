@@ -62,9 +62,9 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="border-t border-gray-200 dark:border-neutral-800 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400 dark:text-neutral-500">
-          <p>© {currentYear} ReFound · MIT Bengaluru. All rights reserved.</p>
+          <p>© {currentYear} ReFound ·  All rights reserved.</p>
           <p className="flex items-center gap-1">
-            Made with love
+            Made by Shoumil and Garvit
           </p>
         </div>
       </div>
