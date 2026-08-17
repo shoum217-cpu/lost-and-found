@@ -53,6 +53,7 @@ export default function Navbar() {
             <NavLink to="/" end className={navLinkClass}>Home</NavLink>
             <NavLink to="/search" className={navLinkClass}>Search</NavLink>
             <NavLink to="/report" className={navLinkClass}>Report Item</NavLink>
+            <NavLink to="/how-it-works" className={navLinkClass}>How it Works?</NavLink>
           </nav>
 
           {/* Desktop auth buttons & Theme toggle */}

@@ -21,7 +21,7 @@ export default function Dashboard() {
         <div>
           <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Authentication coming soon</p>
           <p className="text-sm text-blue-600 dark:text-blue-400 mt-0.5">
-            The dashboard will be available once Supabase Auth is connected.
+            The dashboard will be available once MongoDB Auth is connected.
             Log in to see your posted items, submitted claims, and messages.
           </p>
         </div>
