@@ -23,8 +23,8 @@ Report, discover, and return lost belongings on campus.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/refound.git
-cd refound
+git clone https://github.com/shoum217-cpu/lost-and-found.git
+cd lost-and-found
 ```
 
 ### 2. Install dependencies
