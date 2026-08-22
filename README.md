@@ -409,9 +409,18 @@ git push origin feature/your-feature-name
 
 ## License
 
-This project is licensed under the **MIT License** — feel free to use, modify, and build on it.
+This is a personal project built by Shoumil & Garvit and is not currently released under an open-source license. All rights reserved.
 
 ---
+
+## Author
+
+Built and maintained by **Shoumil**, a B.Tech CSE student at Manipal Institute of Technology (MIT), Bengaluru.
+
+FindIt started as a way to go deeper into full-stack MERN development — backend architecture, authentication, AI integration, and real-world UX problems around trust and verification — while solving an actual problem faced on campus.
+
+- GitHub: [@shoum217-cpu](https://github.com/shoum217-cpu)
+- Project Repo: [lost-and-found](https://github.com/shoum217-cpu/lost-and-found)
 
 ## Acknowledgements
 
