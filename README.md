@@ -214,7 +214,7 @@ Lost and Found/
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-username>/lost-and-found.git
+git clone https://github.com/shoum217-cpu/lost-and-found.git
 cd "Lost and Found"
 ```
 
