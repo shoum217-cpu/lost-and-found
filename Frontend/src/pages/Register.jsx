@@ -1,140 +1,172 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Eye, EyeOff } from 'lucide-react'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Loader2, MessageSquare } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import Button from '../components/Button';
 
-/**
- * Register.jsx – Account creation page.
- *
- * UI-only form for now. Will call authService.signUp() when Supabase is connected.
- */
 export default function Register() {
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' })
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    whatsappEnabled: false,
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   function handleChange(e) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    if (form.password !== form.confirmPassword) {
-      alert('Passwords do not match.')
-      return
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    const res = await register(form);
+    setIsLoading(false);
+    if (res.success) {
+      navigate('/dashboard');
+    } else {
+      setError(res.message || 'Registration failed');
     }
-    setIsLoading(true)
-    // TODO: await signUp(form.email, form.password, form.fullName)
-    await new Promise(r => setTimeout(r, 600))
-    setIsLoading(false)
-    alert('Authentication not yet connected. Coming soon!')
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex flex-col transition-colors">
-      {/* Minimal top bar */}
-      <div className="px-6 py-4 border-b border-gray-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 transition-colors">
-        <Link to="/" className="inline-flex items-center gap-2 font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-          <span className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm font-extrabold">R</span>
-          ReFound
+    <div className="min-h-screen bg-[#fafaf9] dark:bg-[#09090b] flex flex-col justify-center py-12 px-4 sm:px-6">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
+        <Link to="/" className="inline-flex items-center gap-2.5 font-extrabold text-2xl text-zinc-900 dark:text-white">
+          <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center font-mono text-sm">
+            F
+          </div>
+          <span>FindIt</span>
         </Link>
+        <h2 className="mt-4 text-xl font-bold text-zinc-900 dark:text-white">
+          Create your FindIt account
+        </h2>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+          Join the intelligent public lost and found network.
+        </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm">
-          <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-gray-100 dark:border-neutral-700 shadow-sm p-8 transition-colors">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Create an account</h1>
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">Join ReFound with your college email.</p>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white dark:bg-[#121215] py-8 px-6 sm:px-10 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          {error && (
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs">
+              {error}
+            </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="fullName" className="text-sm font-medium text-gray-700 dark:text-neutral-300">Full Name</label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Full Name
+              </label>
+              <input
+                name="name"
+                type="text"
+                required
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Alex Vance"
+                className="text-sm px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Email Address
+              </label>
+              <input
+                name="email"
+                type="email"
+                required
+                value={form.email}
+                onChange={handleChange}
+                placeholder="alex@example.com"
+                className="text-sm px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Phone Number (Optional for WhatsApp)
+              </label>
+              <input
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="+919876543210"
+                className="text-sm px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                name="whatsappEnabled"
+                id="regWhatsapp"
+                checked={form.whatsappEnabled}
+                onChange={handleChange}
+                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              />
+              <label htmlFor="regWhatsapp" className="text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer">
+                Enable WhatsApp direct contact for my listings
+              </label>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Password
+              </label>
+              <div className="relative">
                 <input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
-                  autoComplete="name"
-                  value={form.fullName}
+                  minLength={6}
+                  value={form.password}
                   onChange={handleChange}
-                  placeholder="Your full name"
-                  className="text-sm border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2.5 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Min 6 characters"
+                  className="w-full text-sm px-4 py-2.5 pr-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(p => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
+            </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-neutral-300">Email ID</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="you@gmail.com"
-                  className="text-sm border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2.5 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                />
-              </div>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              variant="primary"
+              className="w-full mt-2"
+            >
+              {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Create Account'}
+            </Button>
+          </form>
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-neutral-300">Password</label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
-                    autoComplete="new-password"
-                    value={form.password}
-                    onChange={handleChange}
-                    placeholder="Min. 8 characters"
-                    className="w-full text-sm border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2.5 pr-10 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(p => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 transition-colors cursor-pointer"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-neutral-300">Confirm Password</label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Repeat your password"
-                  className="text-sm border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2.5 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors cursor-pointer mt-1"
-              >
-                {isLoading ? 'Creating account...' : 'Create Account'}
-              </button>
-            </form>
-
-            <p className="text-sm text-center text-gray-500 dark:text-neutral-400 mt-5">
-              Already have an account?{' '}
-              <Link to="/login" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
-                Log in
-              </Link>
-            </p>
-          </div>
+          <p className="text-xs text-center text-zinc-500 mt-6">
+            Already have an account?{' '}
+            <Link to="/login" className="font-semibold text-zinc-900 dark:text-white hover:underline">
+              Log In
+            </Link>
+          </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

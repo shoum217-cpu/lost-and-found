@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, X, Tag, MapPin, Sparkles } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { SlidersHorizontal, X, Tag, MapPin, Sparkles, Plus, AlertCircle, Search as SearchIcon } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import ItemCard from '../components/ItemCard';
 import { getItems } from '../services/itemService';
 import { categories } from '../data/mockItems';
 
-export default function Search() {
+export default function Explore() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') ?? '');
   const [typeFilter, setTypeFilter] = useState(searchParams.get('type') ?? 'all');
@@ -17,7 +17,7 @@ export default function Search() {
   useEffect(() => {
     setIsLoading(true);
     getItems({ type: typeFilter, category: categoryFilter, query })
-      .then(setItems)
+      .then(res => setItems(res || []))
       .finally(() => setIsLoading(false));
   }, [query, typeFilter, categoryFilter]);
 
@@ -37,13 +37,30 @@ export default function Search() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
-          Browse Reports
-        </h1>
-        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Search and filter through active lost and found listings across all public areas.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+            Explore Listings
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            Browse real community reports for lost and found items.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link
+            to="/report?type=lost"
+            className="px-3.5 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-800 transition-colors"
+          >
+            Report Lost
+          </Link>
+          <Link
+            to="/report?type=found"
+            className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+          >
+            Report Found
+          </Link>
+        </div>
       </div>
 
       {/* Search and Filters Bar */}
@@ -103,22 +120,41 @@ export default function Search() {
 
       {/* Results Section */}
       {isLoading ? (
-        <div className="py-20 text-center text-xs text-zinc-400">
+        <div className="py-24 text-center text-xs text-zinc-400">
           Loading listings…
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-20 bg-white dark:bg-[#121215] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-12 max-w-md mx-auto">
-          <SlidersHorizontal size={32} className="mx-auto text-zinc-300 dark:text-zinc-700 mb-3" />
-          <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">No items match your criteria</h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-4">
-            Try adjusting your search terms or resetting filters.
+        /* Polished Empty State for Real Data */
+        <div className="text-center py-20 bg-white dark:bg-[#121215] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-12 max-w-md mx-auto shadow-2xs">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-4 text-zinc-400">
+            <SearchIcon size={22} />
+          </div>
+          <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+            No items found yet.
+          </h3>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 mb-6 leading-relaxed">
+            {hasActiveFilters
+              ? 'No reports match your selected filters. Try broadening your keywords.'
+              : 'There are currently no active lost or found listings reported in the database.'}
           </p>
-          <button
-            onClick={clearFilters}
-            className="px-4 py-2 text-xs font-semibold rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-          >
-            Reset Filters
-          </button>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 transition-colors"
+              >
+                Reset Filters
+              </button>
+            )}
+            <Link
+              to="/report"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 transition-colors"
+            >
+              <Plus size={14} />
+              Report an Item
+            </Link>
+          </div>
         </div>
       ) : (
         <>

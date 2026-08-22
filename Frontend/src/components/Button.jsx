@@ -1,29 +1,26 @@
 /**
- * Button.jsx – Reusable button component.
- *
- * Props:
- *   variant  – 'primary' | 'secondary' | 'outline' | 'ghost'  (default: 'primary')
- *   size     – 'sm' | 'md' | 'lg'                             (default: 'md')
- *   as       – render as a different element, e.g. 'a'         (default: 'button')
- *   children – button label / content
- *   ...rest  – any other HTML button or anchor attributes
+ * Button.jsx – Premium, intentional button component.
  */
 
 const variants = {
   primary:
-    'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm',
+    'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-950 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white dark:active:bg-zinc-200 shadow-sm',
   secondary:
-    'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/50 active:bg-blue-200 dark:active:bg-blue-800',
+    'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700/80 active:bg-zinc-300',
   outline:
-    'border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800 active:bg-gray-100 dark:active:bg-neutral-700',
+    'border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 active:bg-zinc-100',
   ghost:
-    'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800 active:bg-gray-200 dark:active:bg-neutral-700',
+    'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60',
+  whatsapp:
+    'bg-[#075e54] text-white hover:bg-[#128c7e] active:bg-[#054c44] shadow-sm',
+  danger:
+    'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-sm',
 }
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm rounded-md gap-1.5',
-  md: 'px-4 py-2 text-sm rounded-lg gap-2',
-  lg: 'px-5 py-2.5 text-base rounded-lg gap-2',
+  sm: 'px-3 py-1.5 text-xs font-medium rounded-lg gap-1.5',
+  md: 'px-4 py-2 text-sm font-medium rounded-lg gap-2',
+  lg: 'px-5 py-2.5 text-base font-semibold rounded-xl gap-2.5',
 }
 
 export default function Button({
@@ -35,11 +32,11 @@ export default function Button({
   ...rest
 }) {
   const baseClasses =
-    'inline-flex items-center justify-center font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer'
+    'inline-flex items-center justify-center font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100 disabled:opacity-50 disabled:pointer-events-none cursor-pointer select-none'
 
   return (
     <Tag
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseClasses} ${variants[variant] || variants.primary} ${sizes[size] || sizes.md} ${className}`}
       {...rest}
     >
       {children}

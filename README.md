@@ -1,145 +1,80 @@
-# ReFound – MIT Bengaluru Lost & Found Platform
+# FindIt — Intelligent Lost & Found Platform
 
-A modern Lost & Found web application for MIT Bengaluru students.
-Report, discover, and return lost belongings on campus.
+FindIt is a modern, privacy-first public lost and found web application. It combines vision AI item identification, automatic lost ↔ found matching, an encrypted 7-step proof-of-ownership flow, WhatsApp communication, and geographic activity heatmap visualization.
+
+---
+
+## Key Features
+
+- **Smart Item Identification (AI)**: Automatically identifies category, brand, color, item type, and unique features from uploaded photos.
+- **AI-Powered Item Matching**: Cross-matches LOST and FOUND reports in real time, calculating a confidence Match Score with itemized attribute breakdowns.
+- **7-Step Proof-of-Ownership Flow**:
+  1. Potential Match exploration
+  2. "Looking Sus" trigger — Finder requests ownership verification
+  3. Professional, neutral claimant notification
+  4. Confidential verification questionnaire
+  5. AI & rule-based confidence evaluation
+  6. Verified state notification to both parties
+  7. Confidential failed verification handling without answer leakage
+- **WhatsApp Contact**: Direct, pre-filled WhatsApp communication with finders who opt in, keeping phone numbers private.
+- **Activity Heatmap**: Interactive Leaflet-powered geographic density map with timeframe (24h/7d/30d) and category filters.
+- **Premium Design System**: Minimal, editorial, human-designed consumer startup interface with dark mode support.
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Frontend | React + Vite |
-| Styling | Tailwind CSS v4 |
-| Routing | React Router v7 |
-| Icons | Lucide React |
-| Backend | Node.js + Express |
-| Database | MongoDB (Mongoose) |
+|---|---|
+| Frontend | React 19, Vite, Tailwind CSS v4, Lucide React, Leaflet |
+| Backend | Node.js, Express, MongoDB (Mongoose), JWT, Bcrypt |
+| AI Engine | Google Gemini API (`@google/generative-ai`) + Heuristic Semantic Fallback |
 
 ---
 
 ## Getting Started
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/shoum217-cpu/lost-and-found.git
-cd lost-and-found
-```
-
-### 2. Install dependencies
+### 1. Install Dependencies
 
 Frontend:
 ```bash
-npm install
+cd Frontend
+npm install --legacy-peer-deps
 ```
 
 Backend:
 ```bash
-cd server
-npm install
+cd Backend
+npm install --legacy-peer-deps
 ```
 
-### 3. Set up environment variables
+### 2. Configure Environment Variables
+
+Create `Backend/.env`:
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+GEMINI_API_KEY=your_gemini_api_key_optional
+```
+
+Create `Frontend/.env`:
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+### 3. Start Development Servers
 
 Frontend:
 ```bash
-cp .env.example .env
-```
-Edit `.env` and add: `VITE_API_URL=http://localhost:5000/api`
-
-Backend:
-```bash
-cd server
-cp .env.example .env
-```
-Edit `.env` and add your `MONGO_URI`.
-
-> **Note:** The app currently runs using mock data on the frontend while the backend API is being built.
-
-### 4. Start the dev servers
-
-Frontend:
-```bash
-# In the root directory
+cd Frontend
 npm run dev
 ```
 
 Backend:
 ```bash
-# In the server/ directory
+cd Backend
 npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
-
----
-
-## Project Structure
-
-```
-src/
-├── components/       # Reusable UI components (Navbar, ItemCard, etc.)
-├── pages/            # One file per route
-├── layouts/          # Page layouts (MainLayout wraps Navbar + Footer)
-├── services/         # API/data functions (authService, itemService)
-├── data/             # Mock data for development
-├── hooks/            # Custom React hooks (to be built)
-├── App.jsx           # Router setup
-├── main.jsx          # React entry point
-└── index.css         # Tailwind + global styles
-
-server/
-├── config/           # DB connection
-├── controllers/      # Route logic
-├── models/           # Mongoose schemas
-├── routes/           # Express routes
-├── middleware/       # Custom middleware (Auth, etc.)
-└── server.js         # Entry point
-```
-
-## Routes
-
-| Route | Page | Auth Required |
-|-------|------|---------------|
-| `/` | Home | No |
-| `/search` | Search & Browse | No |
-| `/report` | Report Lost/Found | Yes (coming soon) |
-| `/item/:id` | Item Details | No |
-| `/dashboard` | User Dashboard | Yes (coming soon) |
-| `/login` | Login | No |
-| `/register` | Register | No |
-
----
-
-## Backend Integration (Next Steps)
-
-The project is structured and ready for MongoDB Atlas. To activate:
-
-1. **Create a MongoDB Atlas cluster**
-2. **Add connection string** to `server/.env` as `MONGO_URI`
-3. **Finish implementations** in `server/controllers`
-4. **Uncomment API fetch calls** in `src/services`
-
----
-
-## Development Notes
-
-- Mock data lives in `src/data/mockItems.js` — safe to modify for testing
-- All services have commented-out `fetch` API equivalents ready to activate
-- Auth pages (Login, Register) use a separate minimal layout
-
----
-
-## Contributing
-
-Two-developer project. Please:
-- Work on separate feature branches
-- Use descriptive commit messages
-- Never commit `.env`
-
----
-
-## Built by
-
-Students at MIT Bengaluru 🎓
