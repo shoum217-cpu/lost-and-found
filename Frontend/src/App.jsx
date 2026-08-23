@@ -13,6 +13,7 @@ import Heatmap from './pages/Heatmap';
 import Dashboard from './pages/Dashboard';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import ClaimDetails from './pages/ClaimDetails';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { AuthProvider } from './context/AuthContext';
@@ -34,6 +35,8 @@ export default function App() {
               <Route path="/features/verification" element={<OwnershipVerificationFeature />} />
               <Route path="/report" element={<ReportItem />} />
               <Route path="/item/:id" element={<ItemDetails />} />
+              <Route path="/claims/:id" element={<ClaimDetails />} />
+              <Route path="/claims/:id/verify" element={<ClaimDetails />} />
               <Route path="/matches/:id" element={<MatchResults />} />
               <Route path="/heatmap" element={<Heatmap />} />
               <Route path="/dashboard" element={<Dashboard />} />

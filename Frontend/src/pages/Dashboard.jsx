@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Plus, ShieldCheck, Sparkles, MapPin, ArrowRight, AlertCircle } from 'lucide-react';
+import { Package, Plus, ShieldCheck, Sparkles, MapPin, ArrowRight, AlertCircle, Inbox, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getItems } from '../services/itemService';
 import { getMyClaims } from '../services/claimService';
@@ -16,10 +16,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     setIsLoading(true);
-    // Fetch only real items
-    getItems().then(items => {
-      // Filter items belonging to current user or locally submitted in this session
-      setMyItems(items || []);
+    // Fetch user items
+    getItems().then(res => {
+      const items = res?.items || res || [];
+      // If items have createdBy, filter for current user if logged in
+      if (user && user._id) {
+        const userItems = items.filter(item => {
+          const creatorId = item.createdBy?._id || item.createdBy;
+          return creatorId && creatorId.toString() === user._id.toString();
+        });
+        setMyItems(userItems.length > 0 ? userItems : items);
+      } else {
+        setMyItems(items);
+      }
     }).finally(() => setIsLoading(false));
 
     if (token) {
@@ -27,7 +36,9 @@ export default function Dashboard() {
         if (res) setClaims(res);
       });
     }
-  }, [token]);
+  }, [token, user]);
+
+  const totalClaimsCount = (claims.claimsMade?.length || 0) + (claims.claimsReceived?.length || 0);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
@@ -72,7 +83,7 @@ export default function Dashboard() {
               : 'border-transparent text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
           }`}
         >
-          Claims &amp; Verification Inquiries ({claims.claimsMade.length + claims.claimsReceived.length})
+          Claims &amp; Verification Inquiries ({totalClaimsCount})
         </button>
       </div>
 
@@ -117,45 +128,110 @@ export default function Dashboard() {
           )}
         </div>
       ) : (
-        <div className="space-y-4">
-          {claims.claimsMade.length === 0 && claims.claimsReceived.length === 0 ? (
-            <div className="bg-white dark:bg-[#121215] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-16 text-center max-w-md mx-auto shadow-2xs">
-              <ShieldCheck size={36} className="mx-auto text-zinc-300 dark:text-zinc-700 mb-3" />
-              <h3 className="text-base font-bold text-zinc-900 dark:text-white">
-                No claims in progress.
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                When you claim a found item or receive verification requests from finders, they will be tracked here.
-              </p>
+        <div className="space-y-8">
+          {/* Claims Received Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Inbox size={18} className="text-blue-500" />
+              <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+                Claims Received on Your Found Items ({claims.claimsReceived?.length || 0})
+              </h2>
             </div>
-          ) : (
-            claims.claimsMade.map(claim => (
-              <div
-                key={claim._id}
-                className="p-5 rounded-2xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-              >
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 uppercase">
-                      {claim.status}
-                    </span>
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-                      Item Claim #{claim._id?.slice(-5)}
-                    </h3>
-                  </div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Initiated {new Date(claim.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <Link
-                  to={`/item/${claim.item}`}
-                  className="px-4 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold"
-                >
-                  View Details
-                </Link>
+
+            {(!claims.claimsReceived || claims.claimsReceived.length === 0) ? (
+              <div className="p-8 rounded-2xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-400">
+                No claims received yet from other users.
               </div>
-            ))
-          )}
+            ) : (
+              <div className="space-y-3">
+                {claims.claimsReceived.map(claim => (
+                  <div
+                    key={claim._id}
+                    className="p-5 rounded-2xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          claim.status === 'VERIFIED'
+                            ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                            : claim.status === 'REJECTED'
+                            ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
+                            : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                        }`}>
+                          {claim.status}
+                        </span>
+                        <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                          Claim from {claim.claimantName || claim.claimant?.name || 'Claimant'} on &ldquo;{claim.item?.title || 'Found Item'}&rdquo;
+                        </h3>
+                      </div>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Received {new Date(claim.createdAt).toLocaleDateString()} • {claim.initialMessage ? `"${claim.initialMessage.slice(0, 60)}..."` : 'No note'}
+                      </p>
+                    </div>
+
+                    <Link
+                      to={`/claims/${claim._id}`}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-800 transition-colors shrink-0"
+                    >
+                      Review Claim <ArrowRight size={13} />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Claims Made Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Send size={18} className="text-amber-500" />
+              <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+                Claims You Submitted ({claims.claimsMade?.length || 0})
+              </h2>
+            </div>
+
+            {(!claims.claimsMade || claims.claimsMade.length === 0) ? (
+              <div className="p-8 rounded-2xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-400">
+                You haven&rsquo;t submitted any claims on found items yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {claims.claimsMade.map(claim => (
+                  <div
+                    key={claim._id}
+                    className="p-5 rounded-2xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          claim.status === 'VERIFIED'
+                            ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                            : claim.status === 'REJECTED'
+                            ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
+                            : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                        }`}>
+                          {claim.status}
+                        </span>
+                        <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                          Claim on &ldquo;{claim.item?.title || 'Found Item'}&rdquo;
+                        </h3>
+                      </div>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Initiated {new Date(claim.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <Link
+                      to={`/claims/${claim._id}`}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-semibold hover:bg-zinc-200 transition-colors shrink-0"
+                    >
+                      View Details <ArrowRight size={13} />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

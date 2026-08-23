@@ -108,12 +108,56 @@ export async function submitVerificationAnswers(claimId, answers, token) {
   return result;
 }
 
+export async function approveClaim(claimId, token) {
+  try {
+    const res = await fetch(`${API_URL}/claims/${claimId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.ok) return await res.json();
+  } catch (err) {}
+
+  const claim = localClaims.find(c => c._id === claimId);
+  if (claim) {
+    claim.status = 'VERIFIED';
+    persistClaims();
+  }
+  return { success: true, claim };
+}
+
+export async function rejectClaim(claimId, token) {
+  try {
+    const res = await fetch(`${API_URL}/claims/${claimId}/reject`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.ok) return await res.json();
+  } catch (err) {}
+
+  const claim = localClaims.find(c => c._id === claimId);
+  if (claim) {
+    claim.status = 'REJECTED';
+    persistClaims();
+  }
+  return { success: true, claim };
+}
+
 export async function getClaimById(claimId, token) {
   try {
     const res = await fetch(`${API_URL}/claims/${claimId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) return await res.json();
+    if (res.status === 403) return { error: 'UNAUTHORIZED', status: 403, message: 'Not authorized to view this claim' };
+    if (res.status === 404) return { error: 'NOT_FOUND', status: 404, message: 'Claim not found' };
   } catch (err) {}
 
   return localClaims.find(c => c._id === claimId) || null;
