@@ -6,8 +6,10 @@ import Notification from '../models/Notification.js';
 export const getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({ recipient: req.user._id })
+      .populate('item', 'title category type image status')
+      .populate('claim', '_id status claimantName')
       .sort({ createdAt: -1 })
-      .limit(30);
+      .limit(50);
 
     const unreadCount = await Notification.countDocuments({
       recipient: req.user._id,

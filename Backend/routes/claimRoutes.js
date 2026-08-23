@@ -3,6 +3,8 @@ import {
   createClaim,
   requestVerification,
   submitVerificationAnswers,
+  approveClaim,
+  rejectClaim,
   getClaimById,
   getMyClaims,
 } from '../controllers/claimController.js';
@@ -19,5 +21,7 @@ router.route('/')
 router.get('/:id', getClaimById);
 router.post('/:id/request-verification', requestVerification);
 router.post('/:id/submit-answers', submitVerificationAnswers);
+router.post('/:id/approve', approveClaim);
+router.post('/:id/reject', rejectClaim);
 
 export default router;

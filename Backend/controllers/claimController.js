@@ -71,9 +71,17 @@ export const requestVerification = async (req, res) => {
 
     const item = claim.item;
 
+    // Verify requesting user is finder or item creator
+    const isFinder = claim.finder && claim.finder.toString() === req.user._id.toString();
+    const isItemCreator = item && item.createdBy && item.createdBy.toString() === req.user._id.toString();
+
+    if (!isFinder && !isItemCreator && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to request verification for this claim' });
+    }
+
     // Compile questions for claimant (use item questions if defined, or generate standard smart questions)
     let questions = [];
-    if (item.ownershipQuestions && item.ownershipQuestions.length > 0) {
+    if (item && item.ownershipQuestions && item.ownershipQuestions.length > 0) {
       questions = item.ownershipQuestions.map(q => ({
         question: q.question,
         answer: '',
@@ -97,9 +105,9 @@ export const requestVerification = async (req, res) => {
       type: 'VERIFICATION_REQUESTED',
       title: '⚠️ Ownership verification requested',
       message: 'The finder has requested additional verification before proceeding with the return of this item.',
-      item: item._id,
+      item: item ? item._id : undefined,
       claim: claim._id,
-      link: `/claims/${claim._id}/verify`,
+      link: `/claims/${claim._id}`,
     });
 
     return res.json({
@@ -133,9 +141,9 @@ export const submitVerificationAnswers = async (req, res) => {
 
     // Get ground truth questions & answers (if set on item) or item metadata
     let truthPairs = [];
-    if (item.ownershipQuestions && item.ownershipQuestions.length > 0) {
+    if (item && item.ownershipQuestions && item.ownershipQuestions.length > 0) {
       truthPairs = item.ownershipQuestions;
-    } else {
+    } else if (item) {
       // Fallback truth comparison with item description & distinguishingFeatures
       truthPairs = [
         {
@@ -173,7 +181,7 @@ export const submitVerificationAnswers = async (req, res) => {
           type: 'VERIFICATION_PASSED',
           title: '✓ Ownership verified',
           message: 'The claimant successfully answered the ownership verification questions. You can now proceed with the return.',
-          item: item._id,
+          item: item ? item._id : undefined,
           claim: claim._id,
           link: `/claims/${claim._id}`,
         });
@@ -185,7 +193,7 @@ export const submitVerificationAnswers = async (req, res) => {
         type: 'VERIFICATION_PASSED',
         title: '✓ Ownership verified',
         message: 'Your verification was successful. The finder has been notified.',
-        item: item._id,
+        item: item ? item._id : undefined,
         claim: claim._id,
         link: `/claims/${claim._id}`,
       });
@@ -196,7 +204,7 @@ export const submitVerificationAnswers = async (req, res) => {
         type: 'VERIFICATION_FAILED',
         title: 'Verification unsuccessful',
         message: 'The information provided did not sufficiently match the ownership details.',
-        item: item._id,
+        item: item ? item._id : undefined,
         claim: claim._id,
         link: `/claims/${claim._id}`,
       });
@@ -206,8 +214,8 @@ export const submitVerificationAnswers = async (req, res) => {
           recipient: claim.finder,
           type: 'VERIFICATION_FAILED',
           title: 'Verification Unsuccessful for Claimant',
-          message: `The claimant attempted verification for "${item.title}" but did not meet the confidence threshold.`,
-          item: item._id,
+          message: `The claimant attempted verification for "${item ? item.title : 'the item'}" but did not meet the confidence threshold.`,
+          item: item ? item._id : undefined,
           claim: claim._id,
           link: `/claims/${claim._id}`,
         });
@@ -221,10 +229,103 @@ export const submitVerificationAnswers = async (req, res) => {
       isVerified: verificationResult.isVerified,
       breakdown: verificationResult.breakdown,
       feedback: verificationResult.feedback,
+      claim,
     });
   } catch (error) {
     console.error('Error in submitVerificationAnswers:', error);
     return res.status(500).json({ message: 'Server error evaluating verification' });
+  }
+};
+
+// @desc    Approve claim (Finder only)
+// @route   POST /api/claims/:id/approve
+// @access  Private (Finder only)
+export const approveClaim = async (req, res) => {
+  try {
+    const claim = await Claim.findById(req.params.id).populate('item');
+    if (!claim) {
+      return res.status(404).json({ message: 'Claim not found' });
+    }
+
+    const item = claim.item;
+    const isFinder = claim.finder && claim.finder.toString() === req.user._id.toString();
+    const isItemCreator = item && item.createdBy && item.createdBy.toString() === req.user._id.toString();
+
+    if (!isFinder && !isItemCreator && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to approve this claim' });
+    }
+
+    claim.status = 'VERIFIED';
+    claim.verifiedAt = new Date();
+    await claim.save();
+
+    if (item) {
+      item.status = 'CLAIMED';
+      await item.save();
+    }
+
+    // Notify claimant
+    await Notification.create({
+      recipient: claim.claimant,
+      type: 'VERIFICATION_PASSED',
+      title: 'Claim Approved!',
+      message: `Your claim on "${item ? item.title : 'the item'}" has been approved by the finder.`,
+      item: item ? item._id : undefined,
+      claim: claim._id,
+      link: `/claims/${claim._id}`,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Claim approved successfully',
+      claim,
+    });
+  } catch (error) {
+    console.error('Error in approveClaim:', error);
+    return res.status(500).json({ message: 'Server error approving claim' });
+  }
+};
+
+// @desc    Reject claim (Finder only)
+// @route   POST /api/claims/:id/reject
+// @access  Private (Finder only)
+export const rejectClaim = async (req, res) => {
+  try {
+    const claim = await Claim.findById(req.params.id).populate('item');
+    if (!claim) {
+      return res.status(404).json({ message: 'Claim not found' });
+    }
+
+    const item = claim.item;
+    const isFinder = claim.finder && claim.finder.toString() === req.user._id.toString();
+    const isItemCreator = item && item.createdBy && item.createdBy.toString() === req.user._id.toString();
+
+    if (!isFinder && !isItemCreator && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to reject this claim' });
+    }
+
+    claim.status = 'REJECTED';
+    await claim.save();
+
+    // Notify claimant
+    await Notification.create({
+      recipient: claim.claimant,
+      type: 'VERIFICATION_FAILED',
+      title: 'Claim Declined',
+      message: `Your claim on "${item ? item.title : 'the item'}" was declined by the finder.`,
+      item: item ? item._id : undefined,
+      claim: claim._id,
+      link: `/claims/${claim._id}`,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Claim rejected',
+      claim,
+    });
+  } catch (error) {
+    console.error('Error in rejectClaim:', error);
+    return res.status(500).json({ message: 'Server error rejecting claim' });
   }
 };
 
@@ -235,22 +336,41 @@ export const getClaimById = async (req, res) => {
   try {
     const claim = await Claim.findById(req.params.id)
       .populate('item')
-      .populate('claimant', 'name email phone')
-      .populate('finder', 'name email phone');
+      .populate('claimant', 'name email phone whatsappEnabled')
+      .populate('finder', 'name email phone whatsappEnabled');
 
     if (!claim) {
       return res.status(404).json({ message: 'Claim not found' });
     }
 
-    const isClaimant = req.user && claim.claimant && claim.claimant._id.toString() === req.user._id.toString();
-    const isFinder = req.user && claim.finder && claim.finder._id.toString() === req.user._id.toString();
+    const claimantId = claim.claimant?._id ? claim.claimant._id.toString() : claim.claimant?.toString();
+    const finderId = claim.finder?._id ? claim.finder._id.toString() : claim.finder?.toString();
+    const itemCreatorId = claim.item?.createdBy?.toString();
+    const currentUserId = req.user._id.toString();
 
-    if (!isClaimant && !isFinder && req.user.role !== 'admin') {
+    const isClaimant = claimantId === currentUserId;
+    const isFinder = finderId === currentUserId;
+    const isItemCreator = itemCreatorId === currentUserId;
+
+    if (!isClaimant && !isFinder && !isItemCreator && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to view this claim' });
     }
 
-    return res.json(claim);
+    const claimObj = claim.toObject();
+
+    // Privacy & Security: If viewer is claimant and not finder/item creator, sanitize item ownership question answers
+    if (!isFinder && !isItemCreator && req.user.role !== 'admin') {
+      if (claimObj.item && Array.isArray(claimObj.item.ownershipQuestions)) {
+        claimObj.item.ownershipQuestions = claimObj.item.ownershipQuestions.map(q => ({
+          _id: q._id,
+          question: q.question,
+        }));
+      }
+    }
+
+    return res.json(claimObj);
   } catch (error) {
+    console.error('Error in getClaimById:', error);
     return res.status(500).json({ message: 'Server error retrieving claim' });
   }
 };
@@ -262,6 +382,7 @@ export const getMyClaims = async (req, res) => {
   try {
     const madeClaims = await Claim.find({ claimant: req.user._id })
       .populate('item')
+      .populate('finder', 'name email phone')
       .sort({ createdAt: -1 });
 
     const receivedClaims = await Claim.find({ finder: req.user._id })
@@ -274,6 +395,7 @@ export const getMyClaims = async (req, res) => {
       claimsReceived: receivedClaims,
     });
   } catch (error) {
+    console.error('Error in getMyClaims:', error);
     return res.status(500).json({ message: 'Server error retrieving claims' });
   }
 };
