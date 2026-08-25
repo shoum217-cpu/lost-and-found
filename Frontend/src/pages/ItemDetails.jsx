@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { MapPin, Calendar, Tag, User, ArrowLeft, ShieldCheck, Sparkles, MessageSquare, AlertTriangle, CheckCircle2, ShieldAlert } from 'lucide-react';
-import { getItemById } from '../services/itemService';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { MapPin, Calendar, Tag, User, ArrowLeft, ShieldCheck, Sparkles, MessageSquare, AlertTriangle, CheckCircle2, ShieldAlert, Trash2 } from 'lucide-react';
+import { getItemById, deleteItem } from '../services/itemService';
 import { createClaim, requestVerification } from '../services/claimService';
 import { useAuth } from '../context/AuthContext';
 import WhatsAppButton from '../components/WhatsAppButton';
@@ -10,12 +10,16 @@ import Button from '../components/Button';
 
 export default function ItemDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [claimStatus, setClaimStatus] = useState(null); // null | 'CLAIMED' | 'VERIFICATION_REQUESTED' | 'VERIFIED'
   const [claimMessage, setClaimMessage] = useState('');
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [activeClaim, setActiveClaim] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const { user, token, isAuthenticated } = useAuth();
 
@@ -34,9 +38,35 @@ export default function ItemDetails() {
     : '';
 
   const isFound = (item?.type || '').toUpperCase() === 'FOUND';
+  const creatorId = item?.createdBy?._id || item?.createdBy?.id || item?.createdBy;
+  const isOwner = Boolean(
+    user &&
+    creatorId &&
+    ((user._id && creatorId.toString() === user._id.toString()) ||
+     (user.id && creatorId.toString() === user.id.toString()))
+  );
+
+  const handleDeleteItem = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteItem(item._id || item.id, token);
+      setShowDeleteModal(false);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Failed to delete item:', err);
+      setDeleteError(err.message || 'Failed to delete item. Please try again.');
+      setIsDeleting(false);
+    }
+  };
 
   const handleClaimSubmit = async (e) => {
     e.preventDefault();
+    if (!token) {
+      alert('Please log in or register to claim this item.');
+      navigate('/login');
+      return;
+    }
     try {
       const res = await createClaim(item._id || item.id, claimMessage, token);
       if (res && res.claim) {
@@ -198,6 +228,17 @@ export default function ItemDetails() {
                   <span>This is My Item (Claim)</span>
                 </Button>
               )}
+
+              {/* Delete Item Button (Owner of lost item) */}
+              {!isFound && isOwner && (
+                <Button
+                  onClick={() => setShowDeleteModal(true)}
+                  variant="danger"
+                >
+                  <Trash2 size={16} />
+                  <span>Delete Item</span>
+                </Button>
+              )}
             </div>
 
             {/* Suspicious Claim Option (Step 2: Looking Sus) */}
@@ -279,6 +320,61 @@ export default function ItemDetails() {
           />
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-modal-title"
+        >
+          <div className="bg-white dark:bg-[#121215] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 max-w-md w-full shadow-2xl flex flex-col gap-5 relative animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center text-rose-600 dark:text-rose-400">
+              <Trash2 size={22} />
+            </div>
+
+            <div>
+              <h3 id="delete-modal-title" className="text-lg font-bold text-zinc-900 dark:text-white">
+                Delete this lost item?
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1.5 leading-relaxed">
+                Are you sure you want to delete this listing? This action cannot be undone.
+              </p>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                <AlertTriangle size={15} className="shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteError(null);
+                }}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={handleDeleteItem}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Item'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

@@ -1,5 +1,6 @@
 import Item from '../models/Item.js';
 import Notification from '../models/Notification.js';
+import Claim from '../models/Claim.js';
 import { calculateItemMatch } from './aiController.js';
 
 // Helper to sanitize item for public consumption (strip private ownership answers)
@@ -161,8 +162,8 @@ export const createItem = async (req, res) => {
       allowWhatsapp: Boolean(allowWhatsapp),
       contactPhone: contactPhone || '',
       coordinates: itemCoordinates,
-      createdBy: req.user ? req.user._id : null,
-      reporterName: reporterName || (req.user ? req.user.name : 'Anonymous Reporter'),
+      createdBy: req.user._id,
+      reporterName: req.user.name || reporterName || 'Anonymous Reporter',
       status: 'ACTIVE',
     });
 
@@ -327,13 +328,18 @@ export const deleteItem = async (req, res) => {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    if (item.createdBy && (!req.user || item.createdBy.toString() !== req.user._id.toString())) {
+    if (!item.createdBy || item.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this item' });
     }
+
+    // Clean up related notifications and claims
+    await Notification.deleteMany({ item: item._id });
+    await Claim.deleteMany({ item: item._id });
 
     await item.deleteOne();
     return res.json({ message: 'Item removed successfully' });
   } catch (error) {
+    console.error('Error deleting item:', error);
     return res.status(500).json({ message: 'Server error deleting item' });
   }
 };

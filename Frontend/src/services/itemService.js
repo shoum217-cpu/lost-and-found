@@ -214,3 +214,53 @@ export async function getWhatsAppLink(itemId) {
 
   return { allowed: false, message: 'WhatsApp contact is not enabled for this item.' };
 }
+
+/**
+ * Delete an item
+ */
+export async function deleteItem(id, token) {
+  try {
+    const res = await fetch(`${API_URL}/items/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      // Also remove from local storage if present
+      try {
+        const local = localStorage.getItem('findit_real_items');
+        if (local) {
+          const items = JSON.parse(local);
+          const filtered = items.filter(item => item.id !== id && item._id !== id);
+          localStorage.setItem('findit_real_items', JSON.stringify(filtered));
+        }
+      } catch (e) {}
+      return data;
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      const error = new Error(errorData.message || 'Failed to delete item');
+      error.status = res.status;
+      throw error;
+    }
+  } catch (err) {
+    if (err.status) {
+      throw err;
+    }
+    // If backend is disconnected, delete from local storage fallback
+    try {
+      const local = localStorage.getItem('findit_real_items');
+      if (local) {
+        const items = JSON.parse(local);
+        const filtered = items.filter(item => item.id !== id && item._id !== id);
+        localStorage.setItem('findit_real_items', JSON.stringify(filtered));
+        return { success: true, message: 'Item removed successfully' };
+      }
+    } catch (e) {}
+    throw err;
+  }
+}
+

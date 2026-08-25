@@ -15,7 +15,7 @@ const router = express.Router();
 
 router.route('/')
   .get(optionalAuth, getItems)
-  .post(optionalAuth, createItem);
+  .post(protect, createItem);
 
 router.get('/my', protect, getMyItems);
 

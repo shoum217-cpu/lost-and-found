@@ -118,6 +118,11 @@ export default function ReportItem() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!token) {
+      alert('Please log in or register to submit a report.');
+      navigate('/login');
+      return;
+    }
     setIsSubmitting(true);
 
     try {
