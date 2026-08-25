@@ -12,7 +12,6 @@ import {
   User,
   Settings,
   LogOut,
-  Plus,
   ArrowRight,
   Sun,
   Moon
@@ -172,12 +171,11 @@ export default function Navbar() {
               </div>
             </nav>
           ) : (
-            /* Logged-In Nav Links */
+            /* Logged-In Nav Links: Home | Explore | Report Item | My Items */
             <nav className="hidden md:flex items-center gap-1" aria-label="Authenticated navigation">
               <NavLink to="/" end className={navLinkClass}>Home</NavLink>
               <NavLink to="/explore" className={navLinkClass}>Explore</NavLink>
-              <NavLink to="/report?type=lost" className={navLinkClass}>Report Lost</NavLink>
-              <NavLink to="/report?type=found" className={navLinkClass}>Report Found</NavLink>
+              <NavLink to="/report" className={navLinkClass}>Report Item</NavLink>
               <NavLink to="/dashboard" className={navLinkClass}>My Items</NavLink>
             </nav>
           )}
@@ -341,8 +339,7 @@ export default function Navbar() {
             <>
               <NavLink to="/" end className={navLinkClass} onClick={closeMenu}>Home</NavLink>
               <NavLink to="/explore" className={navLinkClass} onClick={closeMenu}>Explore</NavLink>
-              <NavLink to="/report?type=lost" className={navLinkClass} onClick={closeMenu}>Report Lost</NavLink>
-              <NavLink to="/report?type=found" className={navLinkClass} onClick={closeMenu}>Report Found</NavLink>
+              <NavLink to="/report" className={navLinkClass} onClick={closeMenu}>Report Item</NavLink>
               <NavLink to="/dashboard" className={navLinkClass} onClick={closeMenu}>My Items</NavLink>
               <NavLink to="/profile" className={navLinkClass} onClick={closeMenu}>Profile &amp; Settings</NavLink>
 

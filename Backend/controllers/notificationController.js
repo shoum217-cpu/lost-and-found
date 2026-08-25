@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Notification from '../models/Notification.js';
 
 // @desc    Get current user's notifications
@@ -21,6 +22,7 @@ export const getNotifications = async (req, res) => {
       unreadCount,
     });
   } catch (error) {
+    console.error('Error retrieving notifications:', error);
     return res.status(500).json({ message: 'Server error retrieving notifications' });
   }
 };
@@ -30,6 +32,10 @@ export const getNotifications = async (req, res) => {
 // @access  Private
 export const markNotificationRead = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid notification ID' });
+    }
+
     const notification = await Notification.findOne({
       _id: req.params.id,
       recipient: req.user._id,
@@ -44,6 +50,7 @@ export const markNotificationRead = async (req, res) => {
 
     return res.json(notification);
   } catch (error) {
+    console.error('Error updating notification:', error);
     return res.status(500).json({ message: 'Server error updating notification' });
   }
 };
@@ -60,6 +67,7 @@ export const markAllNotificationsRead = async (req, res) => {
 
     return res.json({ message: 'All notifications marked as read' });
   } catch (error) {
+    console.error('Error marking notifications read:', error);
     return res.status(500).json({ message: 'Server error marking notifications read' });
   }
 };

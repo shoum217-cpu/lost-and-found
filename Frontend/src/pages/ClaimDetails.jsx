@@ -19,7 +19,8 @@ import {
   ExternalLink,
   Loader2,
   Check,
-  X
+  X,
+  RotateCcw
 } from 'lucide-react';
 import { getClaimById, requestVerification, approveClaim, rejectClaim } from '../services/claimService';
 import { useAuth } from '../context/AuthContext';
@@ -30,17 +31,19 @@ import Button from '../components/Button';
 export default function ClaimDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, token, isAuthenticated } = useAuth();
+  const { user, token, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [claim, setClaim] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorStatus, setErrorStatus] = useState(null); // null | 'NOT_FOUND' | 'UNAUTHORIZED' | 'ERROR'
+  const [errorStatus, setErrorStatus] = useState(null); // null | 'NOT_FOUND' | 'UNAUTHORIZED' | 'INVALID_ID' | 'ERROR' | 'UNAUTHENTICATED' | 'NETWORK_ERROR'
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState(null);
 
   const fetchClaim = async () => {
     if (!token) {
-      setIsLoading(false);
+      if (!authLoading) {
+        setIsLoading(false);
+      }
       return;
     }
 
@@ -51,10 +54,16 @@ export default function ClaimDetails() {
 
       if (!data) {
         setErrorStatus('NOT_FOUND');
+      } else if (data.error === 'INVALID_ID' || data.status === 400) {
+        setErrorStatus('INVALID_ID');
+      } else if (data.error === 'UNAUTHENTICATED' || data.status === 401) {
+        setErrorStatus('UNAUTHENTICATED');
       } else if (data.error === 'UNAUTHORIZED' || data.status === 403) {
         setErrorStatus('UNAUTHORIZED');
       } else if (data.error === 'NOT_FOUND' || data.status === 404) {
         setErrorStatus('NOT_FOUND');
+      } else if (data.error || data.status >= 500) {
+        setErrorStatus('ERROR');
       } else {
         setClaim(data);
       }
@@ -66,8 +75,10 @@ export default function ClaimDetails() {
   };
 
   useEffect(() => {
-    fetchClaim();
-  }, [id, token]);
+    if (!authLoading) {
+      fetchClaim();
+    }
+  }, [id, token, authLoading]);
 
   const currentUserId = user?._id || user?.id;
   const claimantId = claim?.claimant?._id || claim?.claimant;
@@ -89,7 +100,7 @@ export default function ClaimDetails() {
         fetchClaim();
       }
     } catch (err) {
-      setActionMessage({ type: 'error', text: 'Failed to request verification.' });
+      setActionMessage({ type: 'error', text: err.message || 'Failed to request verification.' });
     } finally {
       setActionLoading(false);
     }
@@ -106,7 +117,7 @@ export default function ClaimDetails() {
         fetchClaim();
       }
     } catch (err) {
-      setActionMessage({ type: 'error', text: 'Failed to approve claim.' });
+      setActionMessage({ type: 'error', text: err.message || 'Failed to approve claim.' });
     } finally {
       setActionLoading(false);
     }
@@ -123,17 +134,30 @@ export default function ClaimDetails() {
         fetchClaim();
       }
     } catch (err) {
-      setActionMessage({ type: 'error', text: 'Failed to reject claim.' });
+      setActionMessage({ type: 'error', text: err.message || 'Failed to reject claim.' });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleVerificationComplete = (evalResult) => {
+  const handleVerificationComplete = () => {
     fetchClaim();
   };
 
-  if (!isAuthenticated && !isLoading) {
+  // Loading state (auth or fetch)
+  if (authLoading || (isLoading && token)) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-24 text-center">
+        <Loader2 size={32} className="animate-spin text-zinc-400 mx-auto mb-3" />
+        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          Loading claim specifications…
+        </p>
+      </div>
+    );
+  }
+
+  // Not authenticated
+  if (!isAuthenticated && !token) {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center">
         <div className="p-4 rounded-full bg-zinc-100 dark:bg-zinc-800 w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -153,17 +177,7 @@ export default function ClaimDetails() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-24 text-center">
-        <Loader2 size={32} className="animate-spin text-zinc-400 mx-auto mb-3" />
-        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          Loading claim specifications…
-        </p>
-      </div>
-    );
-  }
-
+  // Unauthorized (Access Restricted)
   if (errorStatus === 'UNAUTHORIZED') {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center">
@@ -184,7 +198,29 @@ export default function ClaimDetails() {
     );
   }
 
-  if (errorStatus === 'NOT_FOUND' || !claim) {
+  // Invalid Claim ID
+  if (errorStatus === 'INVALID_ID') {
+    return (
+      <div className="max-w-md mx-auto px-4 py-20 text-center">
+        <div className="p-4 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle size={28} />
+        </div>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Invalid Claim Identifier</h2>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 mb-6">
+          The claim link or identifier provided is invalid or malformed.
+        </p>
+        <Link
+          to="/notifications"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-800 transition-colors"
+        >
+          <ArrowLeft size={14} /> Back to Notifications
+        </Link>
+      </div>
+    );
+  }
+
+  // Not Found
+  if (errorStatus === 'NOT_FOUND') {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center">
         <div className="p-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -200,6 +236,27 @@ export default function ClaimDetails() {
         >
           <ArrowLeft size={14} /> Return to Dashboard
         </Link>
+      </div>
+    );
+  }
+
+  // API / Network Error
+  if (errorStatus === 'ERROR' || errorStatus === 'NETWORK_ERROR' || (!claim && !isLoading)) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-20 text-center">
+        <div className="p-4 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-500 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle size={28} />
+        </div>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Unable to Load Claim</h2>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 mb-6 leading-relaxed">
+          A server or network error occurred while retrieving this claim. Please try again.
+        </p>
+        <button
+          onClick={fetchClaim}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-800 cursor-pointer transition-colors"
+        >
+          <RotateCcw size={14} /> Retry
+        </button>
       </div>
     );
   }
@@ -222,6 +279,13 @@ export default function ClaimDetails() {
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
             <ShieldAlert size={13} />
             Verification Requested
+          </span>
+        );
+      case 'ANSWERS_SUBMITTED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+            <Sparkles size={13} />
+            Answers Submitted
           </span>
         );
       case 'FAILED':
@@ -310,7 +374,7 @@ export default function ClaimDetails() {
           <div className="sm:col-span-1 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 overflow-hidden aspect-video sm:aspect-square relative max-h-48">
             <img
               src={item.image || item.imageUrl || 'https://images.unsplash.com/photo-1586282391129-76a6df230234?w=1000&q=80'}
-              alt={item.title}
+              alt={item.title || 'Item image'}
               className="w-full h-full object-cover"
             />
             <span className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/60 text-white backdrop-blur-xs">
@@ -322,7 +386,7 @@ export default function ClaimDetails() {
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <h3 className="text-base font-bold text-zinc-900 dark:text-white">
-                  {item.title}
+                  {item.title || 'Item Details'}
                 </h3>
                 {item._id && (
                   <Link
@@ -334,18 +398,18 @@ export default function ClaimDetails() {
                 )}
               </div>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 leading-relaxed">
-                {item.description}
+                {item.description || 'No description provided.'}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-1.5">
                 <Tag size={13} className="text-zinc-400 shrink-0" />
-                <span className="truncate">Category: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{item.category}</span></span>
+                <span className="truncate">Category: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{item.category || 'General'}</span></span>
               </div>
               <div className="flex items-center gap-1.5">
                 <MapPin size={13} className="text-zinc-400 shrink-0" />
-                <span className="truncate">Location: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{item.location}</span></span>
+                <span className="truncate">Location: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{item.location || 'Not specified'}</span></span>
               </div>
             </div>
           </div>
@@ -376,6 +440,9 @@ export default function ClaimDetails() {
                 <span className="font-medium text-zinc-800 dark:text-zinc-200 flex items-center gap-1">
                   <Phone size={12} className="text-zinc-400" /> {claimantPhone}
                 </span>
+              )}
+              {!claimantEmail && !claimantPhone && (
+                <span className="text-zinc-400 italic">Contact details provided securely via platform</span>
               )}
             </div>
           </div>
@@ -438,7 +505,7 @@ export default function ClaimDetails() {
         )}
 
         {/* CASE 2: Status is VERIFIED */}
-        {status === 'VERIFIED' && (
+        {(status === 'VERIFIED' || status === 'APPROVED') && (
           <div className="space-y-6">
             <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">

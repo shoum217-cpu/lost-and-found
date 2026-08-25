@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Sparkles, ShieldAlert, CheckCircle2, ArrowRight, CheckCheck, Inbox } from 'lucide-react';
 import { getNotifications, markNotificationRead, markAllRead } from '../services/notificationService';
 import { useAuth } from '../context/AuthContext';
 
 export default function Notifications() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -32,16 +33,26 @@ export default function Notifications() {
   };
 
   const getTargetLink = (notif) => {
-    if (notif.link) return notif.link;
     if (notif.claim) {
-      const claimId = notif.claim._id || notif.claim;
-      return `/claims/${claimId}`;
+      const claimId = typeof notif.claim === 'object' ? notif.claim._id : notif.claim;
+      if (claimId) return `/claims/${claimId}`;
+    }
+    if (notif.link && typeof notif.link === 'string' && notif.link.trim()) {
+      return notif.link.trim();
     }
     if (notif.item) {
-      const itemId = notif.item._id || notif.item;
-      return `/item/${itemId}`;
+      const itemId = typeof notif.item === 'object' ? notif.item._id : notif.item;
+      if (itemId) return `/item/${itemId}`;
     }
     return null;
+  };
+
+  const handleCardClick = (notif) => {
+    handleItemClick(notif._id);
+    const targetLink = getTargetLink(notif);
+    if (targetLink) {
+      navigate(targetLink);
+    }
   };
 
   return (
@@ -80,8 +91,8 @@ export default function Notifications() {
             return (
               <div
                 key={notif._id}
-                onClick={() => handleItemClick(notif._id)}
-                className={`p-5 rounded-2xl border transition-all flex items-start gap-4 ${
+                onClick={() => handleCardClick(notif)}
+                className={`p-5 rounded-2xl border transition-all flex items-start gap-4 cursor-pointer hover:border-zinc-400 dark:hover:border-zinc-600 ${
                   !notif.isRead
                     ? 'bg-zinc-50/90 dark:bg-zinc-900/80 border-zinc-300 dark:border-zinc-700'
                     : 'bg-white dark:bg-[#121215] border-zinc-200/80 dark:border-zinc-800'
@@ -117,7 +128,10 @@ export default function Notifications() {
                   {targetLink && (
                     <Link
                       to={targetLink}
-                      onClick={() => handleItemClick(notif._id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleItemClick(notif._id);
+                      }}
                       className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-900 dark:text-zinc-100 hover:underline mt-3"
                     >
                       View Details

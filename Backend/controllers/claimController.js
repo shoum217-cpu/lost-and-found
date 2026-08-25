@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Claim from '../models/Claim.js';
 import Item from '../models/Item.js';
 import Notification from '../models/Notification.js';
@@ -10,12 +11,21 @@ export const createClaim = async (req, res) => {
   try {
     const { itemId, message } = req.body;
 
+    if (!itemId || !mongoose.Types.ObjectId.isValid(itemId)) {
+      return res.status(400).json({ message: 'Invalid item ID format' });
+    }
+
     const item = await Item.findById(itemId);
     if (!item) {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    // Check if user already submitted a claim
+    // Check if user is trying to claim their own reported item
+    if (item.createdBy && item.createdBy.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: 'You cannot claim an item you reported' });
+    }
+
+    // Check if user already submitted an active claim
     const existingClaim = await Claim.findOne({
       item: itemId,
       claimant: req.user._id,
@@ -64,6 +74,10 @@ export const createClaim = async (req, res) => {
 // @access  Private (Finder only)
 export const requestVerification = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid claim ID format' });
+    }
+
     const claim = await Claim.findById(req.params.id).populate('item');
     if (!claim) {
       return res.status(404).json({ message: 'Claim not found' });
@@ -72,10 +86,13 @@ export const requestVerification = async (req, res) => {
     const item = claim.item;
 
     // Verify requesting user is finder or item creator
-    const isFinder = claim.finder && claim.finder.toString() === req.user._id.toString();
-    const isItemCreator = item && item.createdBy && item.createdBy.toString() === req.user._id.toString();
+    const finderId = claim.finder ? claim.finder.toString() : null;
+    const itemCreatorId = item && item.createdBy ? item.createdBy.toString() : null;
+    const currentUserId = req.user._id.toString();
 
-    if (!isFinder && !isItemCreator && req.user.role !== 'admin') {
+    const isFinder = finderId === currentUserId || itemCreatorId === currentUserId;
+
+    if (!isFinder && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to request verification for this claim' });
     }
 
@@ -126,6 +143,10 @@ export const requestVerification = async (req, res) => {
 // @access  Private (Claimant only)
 export const submitVerificationAnswers = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid claim ID format' });
+    }
+
     const { answers } = req.body; // Array of { question, answer }
     const claim = await Claim.findById(req.params.id).populate('item');
 
@@ -162,9 +183,9 @@ export const submitVerificationAnswers = async (req, res) => {
     }
 
     // Step 5: Evaluate with AI + rule-based verification
-    const verificationResult = await verifyAnswersWithAI(truthPairs, answers);
+    const verificationResult = await verifyAnswersWithAI(truthPairs, answers || []);
 
-    claim.verificationQuestions = answers;
+    claim.verificationQuestions = answers || [];
     claim.verificationScore = verificationResult.confidence;
     claim.questionBreakdown = verificationResult.breakdown;
     claim.status = verificationResult.isVerified ? 'VERIFIED' : 'FAILED';
@@ -242,16 +263,23 @@ export const submitVerificationAnswers = async (req, res) => {
 // @access  Private (Finder only)
 export const approveClaim = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid claim ID format' });
+    }
+
     const claim = await Claim.findById(req.params.id).populate('item');
     if (!claim) {
       return res.status(404).json({ message: 'Claim not found' });
     }
 
     const item = claim.item;
-    const isFinder = claim.finder && claim.finder.toString() === req.user._id.toString();
-    const isItemCreator = item && item.createdBy && item.createdBy.toString() === req.user._id.toString();
+    const finderId = claim.finder ? claim.finder.toString() : null;
+    const itemCreatorId = item && item.createdBy ? item.createdBy.toString() : null;
+    const currentUserId = req.user._id.toString();
 
-    if (!isFinder && !isItemCreator && req.user.role !== 'admin') {
+    const isFinder = finderId === currentUserId || itemCreatorId === currentUserId;
+
+    if (!isFinder && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to approve this claim' });
     }
 
@@ -291,16 +319,23 @@ export const approveClaim = async (req, res) => {
 // @access  Private (Finder only)
 export const rejectClaim = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid claim ID format' });
+    }
+
     const claim = await Claim.findById(req.params.id).populate('item');
     if (!claim) {
       return res.status(404).json({ message: 'Claim not found' });
     }
 
     const item = claim.item;
-    const isFinder = claim.finder && claim.finder.toString() === req.user._id.toString();
-    const isItemCreator = item && item.createdBy && item.createdBy.toString() === req.user._id.toString();
+    const finderId = claim.finder ? claim.finder.toString() : null;
+    const itemCreatorId = item && item.createdBy ? item.createdBy.toString() : null;
+    const currentUserId = req.user._id.toString();
 
-    if (!isFinder && !isItemCreator && req.user.role !== 'admin') {
+    const isFinder = finderId === currentUserId || itemCreatorId === currentUserId;
+
+    if (!isFinder && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to reject this claim' });
     }
 
@@ -334,6 +369,10 @@ export const rejectClaim = async (req, res) => {
 // @access  Private
 export const getClaimById = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid claim ID format' });
+    }
+
     const claim = await Claim.findById(req.params.id)
       .populate('item')
       .populate('claimant', 'name email phone whatsappEnabled')
@@ -345,21 +384,20 @@ export const getClaimById = async (req, res) => {
 
     const claimantId = claim.claimant?._id ? claim.claimant._id.toString() : claim.claimant?.toString();
     const finderId = claim.finder?._id ? claim.finder._id.toString() : claim.finder?.toString();
-    const itemCreatorId = claim.item?.createdBy?.toString();
+    const itemCreatorId = claim.item?.createdBy?._id ? claim.item.createdBy._id.toString() : claim.item?.createdBy?.toString();
     const currentUserId = req.user._id.toString();
 
     const isClaimant = claimantId === currentUserId;
-    const isFinder = finderId === currentUserId;
-    const isItemCreator = itemCreatorId === currentUserId;
+    const isFinder = (finderId && finderId === currentUserId) || (itemCreatorId && itemCreatorId === currentUserId);
 
-    if (!isClaimant && !isFinder && !isItemCreator && req.user.role !== 'admin') {
+    if (!isClaimant && !isFinder && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to view this claim' });
     }
 
     const claimObj = claim.toObject();
 
     // Privacy & Security: If viewer is claimant and not finder/item creator, sanitize item ownership question answers
-    if (!isFinder && !isItemCreator && req.user.role !== 'admin') {
+    if (!isFinder && req.user.role !== 'admin') {
       if (claimObj.item && Array.isArray(claimObj.item.ownershipQuestions)) {
         claimObj.item.ownershipQuestions = claimObj.item.ownershipQuestions.map(q => ({
           _id: q._id,

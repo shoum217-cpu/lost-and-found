@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Upload, Sparkles, MapPin, Tag, FileText, Shield, Loader2, Check, ArrowRight, MessageSquare, AlertCircle, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { categories } from '../data/mockItems';
@@ -9,7 +9,7 @@ import MatchCard from '../components/MatchCard';
 import Button from '../components/Button';
 
 export default function ReportItem() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const fileInputRef = useRef(null);
@@ -31,6 +31,14 @@ export default function ReportItem() {
     contactPhone: user?.phone || '',
     image: '',
   });
+
+  // Sync form type if URL param changes (e.g. browser back/forward or direct link)
+  useEffect(() => {
+    const urlType = searchParams.get('type');
+    if (urlType === 'found' || urlType === 'lost') {
+      setForm(prev => (prev.type !== urlType ? { ...prev, type: urlType } : prev));
+    }
+  }, [searchParams]);
 
   // Private Ownership verification questions
   const [ownershipQuestions, setOwnershipQuestions] = useState([
@@ -54,6 +62,7 @@ export default function ReportItem() {
 
   const handleTypeChange = (type) => {
     setForm(prev => ({ ...prev, type }));
+    setSearchParams({ type }, { replace: true });
   };
 
   const handleChange = (e) => {
