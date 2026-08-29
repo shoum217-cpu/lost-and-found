@@ -7,7 +7,9 @@ export const getHeatmapData = async (req, res) => {
   try {
     const { type = 'both', timeframe = '30d', category = 'all' } = req.query;
 
-    const filter = {};
+    const filter = {
+      status: 'ACTIVE',
+    };
 
     // Filter by type
     if (type.toLowerCase() === 'lost') {

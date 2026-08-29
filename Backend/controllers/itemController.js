@@ -44,6 +44,9 @@ export const getItems = async (req, res) => {
 
     if (status && status.toLowerCase() !== 'all') {
       filter.status = status.toUpperCase();
+    } else if (!status) {
+      // By default, public browse and search only return ACTIVE items
+      filter.status = 'ACTIVE';
     }
 
     if (query) {
@@ -354,5 +357,63 @@ export const getMyItems = async (req, res) => {
     return res.json(sanitized);
   } catch (error) {
     return res.status(500).json({ message: 'Server error retrieving user items' });
+  }
+};
+
+// @desc    Mark an item as recovered / resolved (Reporter / Owner resolution)
+// @route   POST /api/items/:id/resolve
+// @access  Private
+export const resolveItem = async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found' });
+    }
+
+    const resolvedStatuses = ['RECOVERED', 'CLAIMED', 'RETURNED', 'RESOLVED'];
+    if (resolvedStatuses.includes(item.status.toUpperCase())) {
+      return res.status(400).json({ message: 'This item has already been marked as recovered or resolved.' });
+    }
+
+    const currentUserId = req.user._id.toString();
+    const isCreator = item.createdBy && item.createdBy.toString() === currentUserId;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({
+        message: item.type === 'LOST'
+          ? 'Only the original reporter can mark this lost item as recovered.'
+          : 'Not authorized to resolve this listing.',
+      });
+    }
+
+    const targetStatus = req.body?.status
+      ? req.body.status.toUpperCase()
+      : (item.type === 'LOST' ? 'RECOVERED' : 'RESOLVED');
+
+    item.status = targetStatus;
+    item.resolvedAt = new Date();
+    item.resolvedBy = req.user._id;
+
+    const savedItem = await item.save();
+
+    // Create a confirmation notification for the reporter
+    await Notification.create({
+      recipient: req.user._id,
+      type: item.type === 'LOST' ? 'ITEM_RECOVERED' : 'ITEM_RESOLVED',
+      title: item.type === 'LOST' ? '✓ Item Marked as Recovered' : '✓ Item Marked as Resolved',
+      message: `"${item.title}" has been marked as ${targetStatus.toLowerCase()} and removed from active public listings.`,
+      item: item._id,
+      link: `/item/${item._id}`,
+    });
+
+    return res.json({
+      success: true,
+      message: `Item marked as ${targetStatus.toLowerCase()} successfully.`,
+      item: sanitizeItem(savedItem, req.user._id),
+    });
+  } catch (error) {
+    console.error('Error in resolveItem:', error);
+    return res.status(500).json({ message: 'Server error resolving item' });
   }
 };

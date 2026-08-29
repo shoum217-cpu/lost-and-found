@@ -80,9 +80,18 @@ const itemSchema = mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ['ACTIVE', 'CLAIMED', 'RETURNED', 'open', 'claimed', 'returned'],
+      enum: ['ACTIVE', 'CLAIMED', 'RETURNED', 'RECOVERED', 'RESOLVED', 'open', 'claimed', 'returned', 'recovered', 'resolved'],
       default: 'ACTIVE',
       set: v => v ? v.toUpperCase() : v,
+    },
+    resolvedAt: {
+      type: Date,
+      default: null,
+    },
+    resolvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

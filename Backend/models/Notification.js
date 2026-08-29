@@ -16,6 +16,8 @@ const notificationSchema = mongoose.Schema(
         'VERIFICATION_PASSED',
         'VERIFICATION_FAILED',
         'ITEM_RETURNED',
+        'ITEM_RECOVERED',
+        'ITEM_RESOLVED',
         'GENERAL',
       ],
       required: true,

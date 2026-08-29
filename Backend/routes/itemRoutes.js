@@ -8,6 +8,7 @@ import {
   getItemMatches,
   getWhatsAppLink,
   getMyItems,
+  resolveItem,
 } from '../controllers/itemController.js';
 import { protect, optionalAuth } from '../middleware/authMiddleware.js';
 
@@ -21,6 +22,7 @@ router.get('/my', protect, getMyItems);
 
 router.get('/:id/matches', optionalAuth, getItemMatches);
 router.get('/:id/whatsapp', getWhatsAppLink);
+router.post('/:id/resolve', protect, resolveItem);
 
 router.route('/:id')
   .get(optionalAuth, getItemById)

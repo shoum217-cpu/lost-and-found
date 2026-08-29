@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Plus, ShieldCheck, Sparkles, MapPin, ArrowRight, AlertCircle, Inbox, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getItems } from '../services/itemService';
+import { getMyItems } from '../services/itemService';
 import { getMyClaims } from '../services/claimService';
 import ItemCard from '../components/ItemCard';
 import Button from '../components/Button';
@@ -16,25 +16,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     setIsLoading(true);
-    // Fetch user items
-    getItems().then(res => {
-      const items = res?.items || res || [];
-      // If items have createdBy, filter for current user if logged in
-      if (user && user._id) {
-        const userItems = items.filter(item => {
-          const creatorId = item.createdBy?._id || item.createdBy;
-          return creatorId && creatorId.toString() === user._id.toString();
-        });
-        setMyItems(userItems.length > 0 ? userItems : items);
-      } else {
-        setMyItems(items);
-      }
-    }).finally(() => setIsLoading(false));
-
     if (token) {
+      getMyItems(token)
+        .then(items => {
+          setMyItems(items || []);
+        })
+        .finally(() => setIsLoading(false));
+
       getMyClaims(token).then(res => {
         if (res) setClaims(res);
       });
+    } else {
+      setIsLoading(false);
     }
   }, [token, user]);
 

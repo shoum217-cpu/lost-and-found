@@ -50,7 +50,11 @@ export default function ItemCard({ item }) {
           <h3 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 line-clamp-1 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
             {item.title}
           </h3>
-          <span className="shrink-0 text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200/60 dark:border-zinc-700/60">
+          <span className={`shrink-0 text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-semibold border ${
+            ['recovered', 'claimed', 'returned', 'resolved'].includes(statusLabel)
+              ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200/60 dark:border-zinc-700/60'
+          }`}>
             {statusLabel}
           </span>
         </div>

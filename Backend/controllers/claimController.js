@@ -20,6 +20,12 @@ export const createClaim = async (req, res) => {
       return res.status(404).json({ message: 'Item not found' });
     }
 
+    // Check if item is already resolved / recovered
+    const resolvedStatuses = ['RECOVERED', 'CLAIMED', 'RETURNED', 'RESOLVED'];
+    if (item.status && resolvedStatuses.includes(item.status.toUpperCase())) {
+      return res.status(400).json({ message: 'This item has already been marked as recovered or resolved and cannot receive new claims.' });
+    }
+
     // Check if user is trying to claim their own reported item
     if (item.createdBy && item.createdBy.toString() === req.user._id.toString()) {
       return res.status(400).json({ message: 'You cannot claim an item you reported' });
@@ -289,6 +295,8 @@ export const approveClaim = async (req, res) => {
 
     if (item) {
       item.status = 'CLAIMED';
+      item.resolvedAt = new Date();
+      item.resolvedBy = req.user._id;
       await item.save();
     }
 

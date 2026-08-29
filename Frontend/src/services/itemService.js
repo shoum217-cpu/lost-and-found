@@ -26,6 +26,12 @@ export async function getItems(filters = {}) {
     const local = localStorage.getItem('findit_real_items');
     if (local) {
       let results = JSON.parse(local);
+      if (filters.status && filters.status.toLowerCase() !== 'all') {
+        const statusUpper = filters.status.toUpperCase();
+        results = results.filter(item => (item.status || 'ACTIVE').toUpperCase() === statusUpper);
+      } else if (!filters.status) {
+        results = results.filter(item => (item.status || 'ACTIVE').toUpperCase() === 'ACTIVE');
+      }
       if (filters.type && filters.type !== 'all') {
         const typeUpper = filters.type.toUpperCase();
         results = results.filter(item => (item.type || '').toUpperCase() === typeUpper);
@@ -258,6 +264,97 @@ export async function deleteItem(id, token) {
         const filtered = items.filter(item => item.id !== id && item._id !== id);
         localStorage.setItem('findit_real_items', JSON.stringify(filtered));
         return { success: true, message: 'Item removed successfully' };
+      }
+    } catch (e) {}
+    throw err;
+  }
+}
+
+/**
+ * Get items created by the authenticated user
+ */
+export async function getMyItems(token) {
+  try {
+    const res = await fetch(`${API_URL}/items/my`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.items)) return data.items;
+    }
+  } catch (err) {
+    console.warn('Error fetching my items from backend:', err);
+  }
+
+  // Fallback to local items created by current user
+  try {
+    const local = localStorage.getItem('findit_real_items');
+    if (local) {
+      return JSON.parse(local);
+    }
+  } catch (e) {}
+
+  return [];
+}
+
+/**
+ * Mark item as recovered / resolved
+ */
+export async function resolveItem(id, token, status = null) {
+  try {
+    const res = await fetch(`${API_URL}/items/${id}/resolve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(status ? { status } : {}),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      // Update local storage item status if exists
+      try {
+        const local = localStorage.getItem('findit_real_items');
+        if (local) {
+          const items = JSON.parse(local);
+          const updated = items.map(item => {
+            if (item.id === id || item._id === id) {
+              return {
+                ...item,
+                status: status || (item.type === 'LOST' ? 'RECOVERED' : 'RESOLVED'),
+                resolvedAt: new Date().toISOString(),
+              };
+            }
+            return item;
+          });
+          localStorage.setItem('findit_real_items', JSON.stringify(updated));
+        }
+      } catch (e) {}
+      return data;
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      const error = new Error(errorData.message || 'Failed to resolve item');
+      error.status = res.status;
+      throw error;
+    }
+  } catch (err) {
+    if (err.status) throw err;
+    // Local fallback
+    try {
+      const local = localStorage.getItem('findit_real_items');
+      if (local) {
+        const items = JSON.parse(local);
+        const targetItem = items.find(item => item.id === id || item._id === id);
+        if (targetItem) {
+          targetItem.status = status || (targetItem.type === 'LOST' ? 'RECOVERED' : 'RESOLVED');
+          targetItem.resolvedAt = new Date().toISOString();
+          localStorage.setItem('findit_real_items', JSON.stringify(items));
+          return { success: true, message: 'Item marked as recovered successfully', item: targetItem };
+        }
       }
     } catch (e) {}
     throw err;
