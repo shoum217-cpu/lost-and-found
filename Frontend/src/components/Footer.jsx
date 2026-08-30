@@ -67,8 +67,7 @@ export default function Footer() {
           <p>© {currentYear} FindIt Inc. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs">
             <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Platform Online
+              Crafted by Shoumil and Garvit
             </span>
           </div>
         </div>
