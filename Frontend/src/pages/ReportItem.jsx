@@ -14,7 +14,8 @@ export default function ReportItem() {
   const { user, token } = useAuth();
   const fileInputRef = useRef(null);
 
-  const initialType = searchParams.get('type') === 'found' ? 'found' : 'lost';
+  const rawParam = searchParams.get('type')?.toLowerCase();
+  const initialType = rawParam === 'found' ? 'found' : 'lost';
 
   const [form, setForm] = useState({
     type: initialType,
@@ -34,7 +35,7 @@ export default function ReportItem() {
 
   // Sync form type if URL param changes (e.g. browser back/forward or direct link)
   useEffect(() => {
-    const urlType = searchParams.get('type');
+    const urlType = searchParams.get('type')?.toLowerCase();
     if (urlType === 'found' || urlType === 'lost') {
       setForm(prev => (prev.type !== urlType ? { ...prev, type: urlType } : prev));
     }
@@ -61,8 +62,9 @@ export default function ReportItem() {
   };
 
   const handleTypeChange = (type) => {
-    setForm(prev => ({ ...prev, type }));
-    setSearchParams({ type }, { replace: true });
+    const nextType = type.toLowerCase() === 'found' ? 'found' : 'lost';
+    setForm(prev => ({ ...prev, type: nextType }));
+    setSearchParams({ type: nextType }, { replace: true });
   };
 
   const handleChange = (e) => {
@@ -266,27 +268,31 @@ export default function ReportItem() {
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
+              id="report-type-lost-btn"
               onClick={() => handleTypeChange('lost')}
               className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-xs sm:text-sm font-semibold cursor-pointer transition-all ${
                 form.type === 'lost'
-                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-300 ring-2 ring-amber-500/20'
-                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
+                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-300 ring-2 ring-amber-500/20 shadow-sm'
+                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
               }`}
+              aria-pressed={form.type === 'lost'}
             >
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className={`w-2 h-2 rounded-full transition-colors ${form.type === 'lost' ? 'bg-amber-500' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
               I Lost Something
             </button>
 
             <button
               type="button"
+              id="report-type-found-btn"
               onClick={() => handleTypeChange('found')}
               className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-xs sm:text-sm font-semibold cursor-pointer transition-all ${
                 form.type === 'found'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-300 ring-2 ring-emerald-500/20'
-                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-300 ring-2 ring-emerald-500/20 shadow-sm'
+                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
               }`}
+              aria-pressed={form.type === 'found'}
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className={`w-2 h-2 rounded-full transition-colors ${form.type === 'found' ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
               I Found Something
             </button>
           </div>
