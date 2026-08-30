@@ -35,33 +35,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafaf9] dark:bg-[#09090b] flex flex-col justify-center py-12 px-4 sm:px-6">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col justify-center py-12 px-4 sm:px-6 transition-colors duration-200">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white mb-6"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink mb-6"
         >
           <ArrowLeft size={14} /> Back to Home
         </Link>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
-        <Link to="/" className="inline-flex items-center gap-2.5 font-extrabold text-2xl text-zinc-900 dark:text-white">
-          <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center font-mono text-sm">
+        <Link to="/" className="inline-flex items-center gap-2.5 font-extrabold text-2xl text-ink">
+          <div className="w-8 h-8 rounded-lg bg-ink text-canvas flex items-center justify-center font-mono text-sm">
             F
           </div>
-          <span>FindIt</span>
+          <span className="font-display">FindIt</span>
         </Link>
-        <h2 className="mt-4 text-2xl font-bold text-zinc-900 dark:text-white">
+        <h2 className="mt-4 text-2xl font-bold text-ink font-display">
           Sign In
         </h2>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+        <p className="text-xs text-muted mt-1">
           Access your listings, match notifications, and claims.
         </p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-[#121215] py-8 px-6 sm:px-10 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <div className="bg-surface py-8 px-6 sm:px-10 rounded-3xl border border-border shadow-sm">
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs">
               {error}
@@ -70,7 +70,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted font-mono">
                 Email Address
               </label>
               <input
@@ -80,19 +80,19 @@ export default function Login() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="name@example.com"
-                className="text-sm px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
+                className="text-sm px-4 py-2.5 rounded-xl border border-border bg-canvas text-ink placeholder:text-muted/65 focus:outline-none focus:ring-2 focus:ring-ink"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted font-mono">
                   Password
                 </label>
                 <button
                   type="button"
                   onClick={() => alert('Password reset: Provide your registered email to receive reset instructions.')}
-                  className="text-[11px] font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                  className="text-[11px] font-medium text-muted hover:text-ink cursor-pointer"
                 >
                   Forgot password?
                 </button>
@@ -105,35 +105,34 @@ export default function Login() {
                   value={form.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full text-sm px-4 py-2.5 pr-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
+                  className="w-full text-sm px-4 py-2.5 pr-10 rounded-xl border border-border bg-canvas text-ink placeholder:text-muted/65 focus:outline-none focus:ring-2 focus:ring-ink"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(p => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink cursor-pointer"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <Button
+            <button
               type="submit"
               disabled={isLoading}
-              variant="primary"
-              className="w-full mt-2"
+              className="btn-primary w-full mt-2 justify-center"
             >
               {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Sign In'}
-            </Button>
+            </button>
           </form>
 
           {/* Social Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
+              <div className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-[#121215] px-3 text-zinc-400 font-mono text-[10px]">
+              <span className="bg-surface px-3 text-muted font-mono text-[10px]">
                 Or
               </span>
             </div>
@@ -143,7 +142,7 @@ export default function Login() {
           <button
             type="button"
             onClick={handleGoogleClick}
-            className="w-full py-2.5 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+            className="w-full py-2.5 px-4 rounded-xl border border-border bg-canvas hover:bg-surface text-ink text-xs font-semibold flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -154,9 +153,9 @@ export default function Login() {
             <span>Continue with Google</span>
           </button>
 
-          <p className="text-xs text-center text-zinc-500 mt-6">
+          <p className="text-xs text-center text-muted mt-6 font-body">
             Don't have an account?{' '}
-            <Link to="/register" className="font-semibold text-zinc-900 dark:text-white hover:underline">
+            <Link to="/register" className="font-semibold text-ink hover:underline">
               Create account
             </Link>
           </p>

@@ -4,16 +4,10 @@ import {
   Menu,
   X,
   ChevronDown,
-  Sparkles,
-  Search as SearchIcon,
-  ShieldCheck,
-  Map,
   Bell,
   User,
   Settings,
   LogOut,
-  Plus,
-  ArrowRight,
   Sun,
   Moon
 } from 'lucide-react';
@@ -30,6 +24,7 @@ export default function Navbar() {
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
 
   const featuresDropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
@@ -37,16 +32,19 @@ export default function Navbar() {
   useEffect(() => {
     if (isAuthenticated && token) {
       getNotifications(token).then(res => {
-        if (res && res.unreadCount !== undefined) {
-          setUnreadCount(res.unreadCount);
-        }
+        if (res && res.unreadCount !== undefined) setUnreadCount(res.unreadCount);
       });
     } else {
       setUnreadCount(0);
     }
   }, [isAuthenticated, token]);
 
-  // Click outside listener for dropdowns
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (featuresDropdownRef.current && !featuresDropdownRef.current.contains(event.target)) {
@@ -66,114 +64,108 @@ export default function Navbar() {
     setIsProfileOpen(false);
   };
 
+  /* Nav link: underline slide, no bg boxes */
   const navLinkClass = ({ isActive }) =>
-    `text-xs sm:text-sm font-medium transition-colors px-3 py-2 rounded-lg ${
+    `relative text-sm font-medium transition-colors pb-0.5 ${
       isActive
-        ? 'text-zinc-900 dark:text-white font-semibold'
-        : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
+        ? 'text-[var(--color-ink)] dark:text-[var(--color-ink-dark)] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1.5px] after:bg-current after:rounded-full'
+        : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] dark:hover:text-[var(--color-ink-dark)]'
     }`;
 
+  const featuresMenuItems = [
+    { to: '/features/matching',      label: 'AI Matching',           desc: 'Visual + semantic cross-matching' },
+    { to: '/features/identification', label: 'Smart Identification',  desc: 'Auto-detect item type & features' },
+    { to: '/features/verification',   label: 'Ownership Verification',desc: 'Secure 7-step return protocol' },
+    { to: '/heatmap',                 label: 'Heatmap Activity',      desc: 'Geographic incident clusters' },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 bg-[#fafaf9]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <header
+      className="sticky top-0 z-50 transition-all duration-200"
+      style={{
+        backgroundColor: scrolled
+          ? 'rgba(245, 241, 235, 0.95)'
+          : 'transparent',
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        borderBottom: scrolled ? '1px solid var(--color-border)' : '1px solid transparent',
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-6 sm:px-8">
         <div className="flex items-center justify-between h-16">
 
-          {/* LEFT: FindIt Logo */}
+          {/* Wordmark */}
           <Link
             to="/"
             onClick={closeMenu}
-            className="flex items-center gap-2.5 font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white tracking-tight"
+            className="flex items-center gap-1.5 tracking-tight"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 800,
+              fontSize: '20px',
+              color: 'var(--color-ink)',
+              letterSpacing: '-0.03em',
+            }}
           >
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center font-mono text-sm font-bold shadow-2xs">
-              F
-            </div>
-            <span className="font-sans">FindIt</span>
+            FindIt
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{ backgroundColor: 'var(--color-found)', marginBottom: '6px' }}
+            />
           </Link>
 
-          {/* CENTER: Navigation Links */}
+          {/* Desktop Nav */}
           {!isAuthenticated ? (
-            /* Logged-Out Nav Links */
-            <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
+            <nav className="hidden md:flex items-center gap-7" aria-label="Main navigation">
               <NavLink to="/" end className={navLinkClass}>Home</NavLink>
               <NavLink to="/how-it-works" className={navLinkClass}>How It Works</NavLink>
               <NavLink to="/explore" className={navLinkClass}>Explore</NavLink>
 
-              {/* Features Dropdown */}
+              {/* Features dropdown */}
               <div className="relative" ref={featuresDropdownRef}>
                 <button
                   type="button"
                   onClick={() => setIsFeaturesOpen(p => !p)}
-                  className="flex items-center gap-1 text-xs sm:text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white px-3 py-2 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-sm font-medium transition-colors cursor-pointer"
+                  style={{ color: isFeaturesOpen ? 'var(--color-ink)' : 'var(--color-muted)' }}
                   aria-expanded={isFeaturesOpen}
                 >
                   <span>Features</span>
-                  <ChevronDown size={14} className={`transition-transform duration-200 ${isFeaturesOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    size={13}
+                    className="transition-transform duration-200"
+                    style={{ transform: isFeaturesOpen ? 'rotate(180deg)' : 'none' }}
+                  />
                 </button>
 
                 {isFeaturesOpen && (
-                  <div className="absolute top-full left-0 mt-1.5 w-64 rounded-2xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 p-2 shadow-lg z-50 flex flex-col gap-1">
-                    <Link
-                      to="/features/matching"
-                      onClick={closeMenu}
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-                    >
-                      <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 shrink-0">
-                        <Sparkles size={16} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-zinc-900 dark:text-white">AI Matching</p>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Intelligent Lost ↔ Found cross matching</p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      to="/features/identification"
-                      onClick={closeMenu}
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-                    >
-                      <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 shrink-0">
-                        <SearchIcon size={16} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-zinc-900 dark:text-white">Smart Identification</p>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Auto-detect item type and features</p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      to="/features/verification"
-                      onClick={closeMenu}
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-                    >
-                      <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 shrink-0">
-                        <ShieldCheck size={16} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-zinc-900 dark:text-white">Ownership Verification</p>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Confidential 7-step return security</p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      to="/heatmap"
-                      onClick={closeMenu}
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-                    >
-                      <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 shrink-0">
-                        <Map size={16} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-zinc-900 dark:text-white">Heatmap Activity</p>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Geographic incident clusters</p>
-                      </div>
-                    </Link>
+                  <div
+                    className="absolute top-full left-0 mt-3 w-72 rounded-xl p-1.5 z-50"
+                    style={{
+                      backgroundColor: 'var(--color-canvas)',
+                      border: '1px solid var(--color-border)',
+                      boxShadow: '0 8px 32px rgba(26,21,18,0.12), 0 2px 8px rgba(26,21,18,0.06)',
+                    }}
+                  >
+                    {featuresMenuItems.map(item => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={closeMenu}
+                        className="flex flex-col gap-0.5 px-3 py-2.5 rounded-lg transition-colors"
+                        style={{}}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
+                      >
+                        <span className="text-sm font-semibold" style={{ color: 'var(--color-ink)' }}>{item.label}</span>
+                        <span className="text-xs" style={{ color: 'var(--color-muted)' }}>{item.desc}</span>
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>
             </nav>
           ) : (
-            /* Logged-In Nav Links */
-            <nav className="hidden md:flex items-center gap-1" aria-label="Authenticated navigation">
+            <nav className="hidden md:flex items-center gap-7" aria-label="Authenticated navigation">
               <NavLink to="/" end className={navLinkClass}>Home</NavLink>
               <NavLink to="/explore" className={navLinkClass}>Explore</NavLink>
               <NavLink to="/report?type=lost" className={navLinkClass}>Report Lost</NavLink>
@@ -182,90 +174,115 @@ export default function Navbar() {
             </nav>
           )}
 
-          {/* RIGHT: Actions */}
-          <div className="hidden md:flex items-center gap-3">
-            {/* Theme Toggle */}
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-4">
+            {/* Theme toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 rounded-md transition-colors cursor-pointer"
+              style={{ color: 'var(--color-muted)' }}
               aria-label="Toggle theme"
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--color-ink)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--color-muted)'}
             >
-              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
             {!isAuthenticated ? (
-              /* Logged-Out Actions: Sign In / Get Started */
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <Link
                   to="/login"
-                  className="px-3.5 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                  className="text-sm font-medium transition-colors"
+                  style={{ color: 'var(--color-muted)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--color-ink)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--color-muted)'}
                 >
-                  Sign In
+                  Sign in
                 </Link>
-                <Link
-                  to="/report"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 transition-all shadow-sm active:scale-[0.98]"
-                >
-                  <span>Get Started</span>
-                  <ArrowRight size={13} />
+                <Link to="/report" className="btn-primary" style={{ padding: '9px 18px', fontSize: '13px' }}>
+                  Get started
                 </Link>
               </div>
             ) : (
-              /* Logged-In Actions: Notifications & Profile */
               <div className="flex items-center gap-2">
+                {/* Notifications */}
                 <Link
                   to="/notifications"
-                  className="relative p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white rounded-lg transition-colors"
+                  className="relative p-1.5 rounded-md transition-colors"
+                  style={{ color: 'var(--color-muted)' }}
                   aria-label="Notifications"
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--color-ink)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--color-muted)'}
                 >
-                  <Bell size={18} />
+                  <Bell size={16} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500" />
+                    <span
+                      className="absolute top-1 right-1 w-2 h-2 rounded-full"
+                      style={{ backgroundColor: 'var(--color-lost)' }}
+                    />
                   )}
                 </Link>
 
-                {/* Profile Dropdown */}
+                {/* Profile dropdown */}
                 <div className="relative" ref={profileDropdownRef}>
                   <button
                     onClick={() => setIsProfileOpen(p => !p)}
-                    className="flex items-center gap-2 p-1.5 pl-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                    className="flex items-center gap-2 rounded-lg transition-colors cursor-pointer"
+                    style={{
+                      padding: '6px 10px 6px 6px',
+                      border: '1px solid var(--color-border)',
+                      backgroundColor: isProfileOpen ? 'var(--color-surface)' : 'transparent',
+                    }}
                     aria-expanded={isProfileOpen}
                   >
-                    <div className="w-6 h-6 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center font-bold text-[10px]">
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[11px]"
+                      style={{ backgroundColor: 'var(--color-ink)', color: 'var(--color-canvas)' }}
+                    >
                       {user?.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
-                    <span className="text-xs font-medium max-w-[90px] truncate text-zinc-800 dark:text-zinc-200">
+                    <span className="text-xs font-medium max-w-[80px] truncate" style={{ color: 'var(--color-ink)' }}>
                       {user?.name || 'Account'}
                     </span>
-                    <ChevronDown size={13} className="text-zinc-400" />
+                    <ChevronDown size={12} style={{ color: 'var(--color-muted)' }} />
                   </button>
 
                   {isProfileOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 w-48 rounded-2xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 p-1.5 shadow-lg z-50 flex flex-col gap-0.5">
-                      <Link
-                        to="/profile"
-                        onClick={closeMenu}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                      >
-                        <User size={14} /> Profile
-                      </Link>
-                      <Link
-                        to="/profile"
-                        onClick={closeMenu}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                      >
-                        <Settings size={14} /> Settings
-                      </Link>
-                      <div className="border-t border-zinc-100 dark:border-zinc-800 my-1" />
+                    <div
+                      className="absolute right-0 top-full mt-2 w-44 rounded-xl p-1.5 z-50"
+                      style={{
+                        backgroundColor: 'var(--color-canvas)',
+                        border: '1px solid var(--color-border)',
+                        boxShadow: '0 8px 32px rgba(26,21,18,0.12), 0 2px 8px rgba(26,21,18,0.06)',
+                      }}
+                    >
+                      {[
+                        { to: '/profile', icon: User, label: 'Profile' },
+                        { to: '/profile', icon: Settings, label: 'Settings' },
+                      ].map(item => (
+                        <Link
+                          key={item.label}
+                          to={item.to}
+                          onClick={closeMenu}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+                          style={{ color: 'var(--color-ink)' }}
+                          onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                          onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
+                        >
+                          <item.icon size={13} />
+                          {item.label}
+                        </Link>
+                      ))}
+                      <div style={{ borderTop: '1px solid var(--color-border)', margin: '4px 0' }} />
                       <button
-                        onClick={() => {
-                          logout();
-                          closeMenu();
-                          navigate('/');
-                        }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 w-full text-left cursor-pointer"
+                        onClick={() => { logout(); closeMenu(); navigate('/'); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer"
+                        style={{ color: '#DC2626' }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(220,38,38,0.06)'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
                       >
-                        <LogOut size={14} /> Sign Out
+                        <LogOut size={13} />
+                        Sign out
                       </button>
                     </div>
                   )}
@@ -274,31 +291,35 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile toggle */}
           <div className="md:hidden flex items-center gap-1">
             <button
               onClick={toggleTheme}
-              className="p-2 text-zinc-600 dark:text-zinc-400 rounded-lg"
+              className="p-2 rounded-md"
+              style={{ color: 'var(--color-muted)' }}
               aria-label="Toggle theme"
             >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
             </button>
-
             {isAuthenticated && (
               <Link
                 to="/notifications"
-                className="relative p-2 text-zinc-600 dark:text-zinc-400 rounded-lg"
+                className="relative p-2 rounded-md"
+                style={{ color: 'var(--color-muted)' }}
               >
-                <Bell size={18} />
+                <Bell size={17} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500" />
+                  <span
+                    className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: 'var(--color-lost)' }}
+                  />
                 )}
               </Link>
             )}
-
             <button
               onClick={() => setIsMenuOpen(p => !p)}
-              className="p-2 rounded-lg text-zinc-600 dark:text-zinc-400"
+              className="p-2 rounded-md"
+              style={{ color: 'var(--color-ink)' }}
               aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -307,55 +328,83 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-zinc-200 dark:border-zinc-800 bg-[#fafaf9] dark:bg-[#09090b] px-4 py-4 flex flex-col gap-1">
+        <div
+          className="md:hidden px-6 py-5 flex flex-col gap-1"
+          style={{
+            backgroundColor: 'var(--color-canvas)',
+            borderTop: '1px solid var(--color-border)',
+          }}
+        >
           {!isAuthenticated ? (
             <>
-              <NavLink to="/" end className={navLinkClass} onClick={closeMenu}>Home</NavLink>
-              <NavLink to="/how-it-works" className={navLinkClass} onClick={closeMenu}>How It Works</NavLink>
-              <NavLink to="/explore" className={navLinkClass} onClick={closeMenu}>Explore</NavLink>
-              <NavLink to="/features/matching" className={navLinkClass} onClick={closeMenu}>AI Matching</NavLink>
-              <NavLink to="/features/identification" className={navLinkClass} onClick={closeMenu}>Smart Identification</NavLink>
-              <NavLink to="/features/verification" className={navLinkClass} onClick={closeMenu}>Ownership Verification</NavLink>
-              <NavLink to="/heatmap" className={navLinkClass} onClick={closeMenu}>Heatmap Activity</NavLink>
-
-              <div className="border-t border-zinc-200 dark:border-zinc-800 mt-2 pt-3 flex flex-col gap-2">
+              {[
+                { to: '/', label: 'Home', end: true },
+                { to: '/how-it-works', label: 'How It Works' },
+                { to: '/explore', label: 'Explore' },
+                { to: '/features/matching', label: 'AI Matching' },
+                { to: '/features/identification', label: 'Smart Identification' },
+                { to: '/features/verification', label: 'Ownership Verification' },
+                { to: '/heatmap', label: 'Heatmap' },
+              ].map(link => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.end}
+                  onClick={closeMenu}
+                  className="py-2 text-sm font-medium"
+                  style={{ color: 'var(--color-ink)' }}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+              <div style={{ borderTop: '1px solid var(--color-border)', marginTop: '8px', paddingTop: '12px' }} className="flex flex-col gap-2">
                 <Link
                   to="/login"
                   onClick={closeMenu}
-                  className="w-full text-center py-2 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200"
+                  className="py-2.5 text-center text-sm font-semibold rounded-lg"
+                  style={{ border: '1px solid var(--color-border)', color: 'var(--color-ink)' }}
                 >
-                  Sign In
+                  Sign in
                 </Link>
                 <Link
                   to="/report"
                   onClick={closeMenu}
-                  className="w-full text-center py-2.5 text-xs font-semibold rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                  className="btn-primary justify-center"
                 >
-                  Get Started
+                  Get started
                 </Link>
               </div>
             </>
           ) : (
             <>
-              <NavLink to="/" end className={navLinkClass} onClick={closeMenu}>Home</NavLink>
-              <NavLink to="/explore" className={navLinkClass} onClick={closeMenu}>Explore</NavLink>
-              <NavLink to="/report?type=lost" className={navLinkClass} onClick={closeMenu}>Report Lost</NavLink>
-              <NavLink to="/report?type=found" className={navLinkClass} onClick={closeMenu}>Report Found</NavLink>
-              <NavLink to="/dashboard" className={navLinkClass} onClick={closeMenu}>My Items</NavLink>
-              <NavLink to="/profile" className={navLinkClass} onClick={closeMenu}>Profile &amp; Settings</NavLink>
-
-              <div className="border-t border-zinc-200 dark:border-zinc-800 mt-2 pt-3">
-                <button
-                  onClick={() => {
-                    logout();
-                    closeMenu();
-                    navigate('/');
-                  }}
-                  className="w-full py-2 text-xs font-semibold text-rose-600 text-left"
+              {[
+                { to: '/', label: 'Home', end: true },
+                { to: '/explore', label: 'Explore' },
+                { to: '/report?type=lost', label: 'Report Lost' },
+                { to: '/report?type=found', label: 'Report Found' },
+                { to: '/dashboard', label: 'My Items' },
+                { to: '/profile', label: 'Profile & Settings' },
+              ].map(link => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.end}
+                  onClick={closeMenu}
+                  className="py-2 text-sm font-medium"
+                  style={{ color: 'var(--color-ink)' }}
                 >
-                  Sign Out
+                  {link.label}
+                </NavLink>
+              ))}
+              <div style={{ borderTop: '1px solid var(--color-border)', marginTop: '8px', paddingTop: '12px' }}>
+                <button
+                  onClick={() => { logout(); closeMenu(); navigate('/'); }}
+                  className="text-sm font-medium cursor-pointer"
+                  style={{ color: '#DC2626' }}
+                >
+                  Sign out
                 </button>
               </div>
             </>
