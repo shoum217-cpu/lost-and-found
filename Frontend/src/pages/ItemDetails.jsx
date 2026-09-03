@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import WhatsAppButton from '../components/WhatsAppButton';
 import VerificationFlow from '../components/VerificationFlow';
 import Button from '../components/Button';
+import { ItemDetailsSkeleton } from '../components/Skeletons';
 
 export default function ItemDetails() {
   const { id } = useParams();
@@ -61,11 +62,7 @@ export default function ItemDetails() {
   };
 
   if (isLoading) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-24 text-center text-zinc-400 text-sm">
-        Loading item specifications…
-      </div>
-    );
+    return <ItemDetailsSkeleton />;
   }
 
   if (!item) {

@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getNotifications } from '../services/notificationService';
+import logoImg from '../assets/findit-logo.jpg';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout, token } = useAuth();
@@ -93,11 +94,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         <div className="flex items-center justify-between h-16">
 
-          {/* Wordmark */}
+          {/* Wordmark + Brand Logo */}
           <Link
             to="/"
             onClick={closeMenu}
-            className="flex items-center gap-1.5 tracking-tight"
+            className="flex items-center gap-2.5 tracking-tight group"
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 800,
@@ -106,11 +107,18 @@ export default function Navbar() {
               letterSpacing: '-0.03em',
             }}
           >
-            FindIt
-            <span
-              className="inline-block w-2 h-2 rounded-full"
-              style={{ backgroundColor: 'var(--color-found)', marginBottom: '6px' }}
+            <img
+              src={logoImg}
+              alt="FindIt Logo"
+              className="w-7 h-7 object-contain rounded-md dark:invert dark:hue-rotate-180 select-none shrink-0"
             />
+            <span className="flex items-center gap-1">
+              FindIt
+              <span
+                className="inline-block w-2 h-2 rounded-full"
+                style={{ backgroundColor: 'var(--color-found)', marginBottom: '5px' }}
+              />
+            </span>
           </Link>
 
           {/* Desktop Nav */}

@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { SlidersHorizontal, X, Tag, MapPin, Sparkles, Plus, AlertCircle, Search as SearchIcon } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import ItemCard from '../components/ItemCard';
+import { ItemCardSkeletonGrid } from '../components/Skeletons';
 import { getItems } from '../services/itemService';
 import { categories } from '../data/mockItems';
 
@@ -120,9 +121,7 @@ export default function Explore() {
 
       {/* Results Section */}
       {isLoading ? (
-        <div className="py-24 text-center text-xs text-zinc-400">
-          Loading listings…
-        </div>
+        <ItemCardSkeletonGrid count={8} />
       ) : items.length === 0 ? (
         /* Polished Empty State for Real Data */
         <div className="text-center py-20 bg-white dark:bg-[#121215] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-12 max-w-md mx-auto shadow-2xs">

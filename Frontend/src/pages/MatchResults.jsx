@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Sparkles, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { Sparkles, ArrowLeft, AlertCircle } from 'lucide-react';
 import { getItemMatches } from '../services/itemService';
 import MatchCard from '../components/MatchCard';
+import { MatchCardSkeleton } from '../components/Skeletons';
 
 export default function MatchResults() {
   const { id } = useParams();
@@ -18,14 +19,13 @@ export default function MatchResults() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-24 text-center flex flex-col items-center justify-center gap-3">
-        <Loader2 size={32} className="animate-spin text-zinc-900 dark:text-zinc-100" />
-        <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-          Finding potential matches…
-        </p>
-        <p className="text-xs text-zinc-400 max-w-xs">
-          Cross-examining reported visual parameters, categories, and locations across actual community listings.
-        </p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        <div className="h-4 w-20 bg-border/60 rounded mb-6 animate-skeleton" />
+        <div className="space-y-2 mb-8 animate-skeleton">
+          <div className="h-7 w-48 bg-border/70 rounded-lg" />
+          <div className="h-4 w-72 bg-border/40 rounded" />
+        </div>
+        <MatchCardSkeleton count={2} />
       </div>
     );
   }

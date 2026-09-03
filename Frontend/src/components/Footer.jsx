@@ -46,10 +46,10 @@ export default function Footer() {
               className="mt-3 text-sm leading-relaxed max-w-xs"
               style={{ color: 'var(--color-muted)' }}
             >
-              MIT Bengaluru's Lost &amp; Found Platform. Helping students and campus community reconnect with their belongings.
+              MAHE BLR's Lost &amp; Found Platform. Helping students and campus community reconnect with their belongings.
             </p>
             <div className="flex flex-wrap gap-4 mt-5 text-xs" style={{ color: 'var(--color-muted)' }}>
-              <span className="font-mono">MIT Bengaluru Campus</span>
+              <span className="font-mono">MAHE BLR Campus</span>
               <span className="font-mono">·</span>
               <span className="font-mono">Verified Handoff</span>
             </div>

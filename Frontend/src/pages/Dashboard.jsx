@@ -6,6 +6,7 @@ import { getItems } from '../services/itemService';
 import { getMyClaims } from '../services/claimService';
 import ItemCard from '../components/ItemCard';
 import Button from '../components/Button';
+import { ItemCardSkeletonGrid, ListSkeleton } from '../components/Skeletons';
 
 export default function Dashboard() {
   const { user, token } = useAuth();
@@ -80,7 +81,7 @@ export default function Dashboard() {
       {activeTab === 'items' ? (
         <div className="space-y-6">
           {isLoading ? (
-            <div className="py-20 text-center text-xs text-zinc-400">Loading your reports…</div>
+            <ItemCardSkeletonGrid count={3} />
           ) : myItems.length === 0 ? (
             <div className="bg-white dark:bg-[#121215] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-16 text-center max-w-md mx-auto shadow-2xs">
               <Package size={36} className="mx-auto text-zinc-300 dark:text-zinc-700 mb-3" />

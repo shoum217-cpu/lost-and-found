@@ -56,7 +56,7 @@ function useCountUp(target, duration = 1200, active = false, reduced = false) {
   return value;
 }
 
-/* ─── MIT Bengaluru Campus Items Visual Showcase ─────────────────────── */
+/* ─── MAHE BLR Campus Items Visual Showcase ─────────────────────── */
 const CAMPUS_COLLAGE_ITEMS = [
   {
     id: 'c1',
@@ -155,24 +155,8 @@ const POSITIONS = [
   { bottom: '4%', left: '47%'},
 ];
 
-/* ─── Collage Tag ─────────────────────────────────────────────────────── */
+/* ─── Collage Tag (Clean fade-in & static display, no zoom/scale jump) ─── */
 function CollageTag({ item, position, delay, animated, reduced }) {
-  const [stamping, setStamping] = useState(false);
-
-  const springStyle = animated && !reduced ? {
-    transform: `rotate(${item.rotate})`,
-    animation: `spring-land 600ms cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms forwards`,
-  } : {
-    transform: `rotate(${item.rotate})`,
-    opacity: 1,
-  };
-
-  function handleClick() {
-    if (reduced) return;
-    setStamping(true);
-    setTimeout(() => setStamping(false), 320);
-  }
-
   return (
     <div
       className="absolute"
@@ -180,29 +164,26 @@ function CollageTag({ item, position, delay, animated, reduced }) {
         ...position,
         zIndex: item.zIndex,
         opacity: animated || reduced ? 1 : 0,
-        transition: reduced ? 'none' : 'opacity 300ms ease',
+        transition: reduced ? 'none' : 'opacity 350ms ease',
       }}
     >
       <div
         className="claim-tag w-44"
         style={{
-          ...springStyle,
-          ...(stamping && !reduced ? {
-            animation: `stamp 280ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards`,
-          } : {}),
+          transform: `rotate(${item.rotate})`,
+          opacity: 1,
         }}
         onMouseEnter={e => {
           if (reduced) return;
           const angle = parseFloat(item.rotate);
-          e.currentTarget.style.transform = `rotate(${angle > 0 ? angle + 2 : angle - 2}deg) translateY(-5px)`;
+          e.currentTarget.style.transform = `rotate(${angle > 0 ? angle + 2 : angle - 2}deg) translateY(-4px)`;
           e.currentTarget.style.boxShadow = 'var(--shadow-tag-hover)';
         }}
         onMouseLeave={e => {
-          if (reduced || stamping) return;
+          if (reduced) return;
           e.currentTarget.style.transform = `rotate(${item.rotate})`;
           e.currentTarget.style.boxShadow = '';
         }}
-        onClick={handleClick}
       >
         <div className={`claim-tag-strip ${item.status}`} />
         <div className="px-3 pb-3">
@@ -215,7 +196,7 @@ function CollageTag({ item, position, delay, animated, reduced }) {
               <img
                 src={item.image}
                 alt={item.name}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                className="w-full h-full object-cover"
                 loading="lazy"
               />
             ) : (
@@ -350,7 +331,7 @@ function MatchShowcase({ reduced }) {
               <span style={{ fontWeight: 300 }}>Not just keyword search.</span>
             </h2>
             <p className="text-sm leading-relaxed mb-8" style={{ color: 'var(--color-muted)', maxWidth: '380px' }}>
-              FindIt compares photos, brands, colors, and campus locations — then provides a real confidence score for MIT Bengaluru reports.
+              FindIt compares photos, brands, colors, and campus locations — then provides a real confidence score for MAHE BLR reports.
             </p>
 
             {[
@@ -553,7 +534,7 @@ export default function Home() {
               }}
             >
               <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-found)' }} />
-              MIT Bengaluru Campus · Lost &amp; Found
+              MAHE BLR Campus · Lost &amp; Found
             </p>
 
             {/* HEADLINE — two parts, different animations */}
@@ -606,7 +587,7 @@ export default function Home() {
                 animationDelay: '640ms',
               }}
             >
-              MIT Bengaluru's dedicated lost &amp; found network. Report lost belongings, register found items, and reconnect with fellow students quickly.
+              MAHE BLR's dedicated lost &amp; found network. Report lost belongings, register found items, and reconnect with fellow students quickly.
             </p>
 
             {/* CTAs */}
@@ -641,7 +622,7 @@ export default function Home() {
             >
               <div>
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: 'var(--color-ink)', lineHeight: 1.2 }}>
-                  MIT Bengaluru
+                  MAHE BLR
                 </p>
                 <p className="meta-label mt-1 text-[11px]">Campus Hub</p>
               </div>
@@ -670,8 +651,6 @@ export default function Home() {
               className="absolute inset-0 right-[-80px]"
               style={{
                 backgroundColor: 'var(--color-surface)',
-                backgroundImage: 'radial-gradient(circle, rgba(26,21,18,0.06) 1px, transparent 1px)',
-                backgroundSize: '20px 20px',
               }}
             />
             {/* Cards */}
@@ -772,7 +751,7 @@ export default function Home() {
                   No active reports on campus right now
                 </h3>
                 <p className="text-xs mt-1.5 mb-5 max-w-sm mx-auto leading-relaxed" style={{ color: 'var(--color-muted)' }}>
-                  Have you lost or found something at MIT Bengaluru? Report it now to start the matching process.
+                  Have you lost or found something at MAHE BLR? Report it now to start the matching process.
                 </p>
                 <Link to="/report" className="btn-primary inline-flex text-xs py-2 px-4">
                   Report First Item
@@ -809,7 +788,7 @@ export default function Home() {
               />
               {[
                 { num: '01', title: 'Upload a photo or description', desc: 'Snap or upload a photo. Our vision engine detects brand, color, and distinguishing attributes automatically.' },
-                { num: '02', title: 'AI campus cross-matching', desc: 'We compare your submission against every active campus report at MIT Bengaluru visually and semantically.' },
+                { num: '02', title: 'AI campus cross-matching', desc: 'We compare your submission against every active campus report at MAHE BLR visually and semantically.' },
                 { num: '03', title: 'Direct WhatsApp & verified return', desc: "When a high-confidence match is detected, connect securely and verify ownership questions before handoff." },
               ].map((step, i) => (
                 <div key={step.num} className="flex gap-5 pb-8 last:pb-0">
@@ -849,7 +828,7 @@ export default function Home() {
       <MatchShowcase reduced={reduced} />
 
       {/* ================================================================
-          MIT BENGALURU CAMPUS VALUE SECTION (Zero Fake Numbers)
+          MAHE BLR CAMPUS VALUE SECTION (Zero Fake Numbers)
           ================================================================ */}
       <section className="max-w-7xl mx-auto px-6 sm:px-8 py-20">
         <div className="mb-12">
@@ -864,7 +843,7 @@ export default function Home() {
               color: 'var(--color-ink)',
             }}
           >
-            Built for the MIT Bengaluru Community
+            Built for the MAHE BLR Community
           </h2>
           <p className="text-sm mt-2 max-w-xl leading-relaxed" style={{ color: 'var(--color-muted)' }}>
             Your campus. Your belongings. One place to find them.

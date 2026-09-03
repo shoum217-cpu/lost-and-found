@@ -137,7 +137,7 @@ export default function Register() {
           Create your FindIt account
         </h2>
         <p className="text-xs text-muted mt-1">
-          Join MIT Bengaluru's campus lost and found platform.
+          Join MAHE BLR's campus lost and found platform.
         </p>
       </div>
 

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
@@ -15,37 +16,61 @@ import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import OpeningSplash from './components/OpeningSplash';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
 export default function App() {
+  const [introState, setIntroState] = useState(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('findit_intro_shown')) {
+      return 'done';
+    }
+    return 'active'; // 'active' | 'fading' | 'done'
+  });
+
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/explore" element={<Explore />} />
-              <Route path="/search" element={<Navigate to="/explore" replace />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/features/matching" element={<AIMatchingFeature />} />
-              <Route path="/features/identification" element={<SmartIdentificationFeature />} />
-              <Route path="/features/verification" element={<OwnershipVerificationFeature />} />
-              <Route path="/report" element={<ReportItem />} />
-              <Route path="/item/:id" element={<ItemDetails />} />
-              <Route path="/matches/:id" element={<MatchResults />} />
-              <Route path="/heatmap" element={<Heatmap />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/profile" element={<Profile />} />
-            </Route>
+        {/* Semi-transparent custom initial loading transition */}
+        {introState !== 'done' && (
+          <OpeningSplash
+            fading={introState === 'fading'}
+            onFade={() => setIntroState('fading')}
+            onComplete={() => setIntroState('done')}
+          />
+        )}
 
-            {/* Dedicated Authentication Pages */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Routes>
-        </BrowserRouter>
+        {/* Actual site content (visible at low 25% opacity during intro, transitions smoothly to 100%) */}
+        <div
+          className={`min-h-screen flex flex-col transition-opacity duration-700 ease-out ${
+            introState === 'active' ? 'opacity-25' : 'opacity-100'
+          }`}
+        >
+          <BrowserRouter>
+            <Routes>
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/search" element={<Navigate to="/explore" replace />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/features/matching" element={<AIMatchingFeature />} />
+                <Route path="/features/identification" element={<SmartIdentificationFeature />} />
+                <Route path="/features/verification" element={<OwnershipVerificationFeature />} />
+                <Route path="/report" element={<ReportItem />} />
+                <Route path="/item/:id" element={<ItemDetails />} />
+                <Route path="/matches/:id" element={<MatchResults />} />
+                <Route path="/heatmap" element={<Heatmap />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/profile" element={<Profile />} />
+              </Route>
+
+              {/* Dedicated Authentication Pages */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Routes>
+          </BrowserRouter>
+        </div>
       </AuthProvider>
     </ThemeProvider>
   );
