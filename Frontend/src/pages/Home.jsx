@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MapPin, Clock, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, ArrowUpRight, ShieldCheck, Sparkles, Building, MessageCircle } from 'lucide-react';
+import { getItems } from '../services/itemService';
 
 /* ─── Reduced motion detection ───────────────────────────────────────── */
 function usePrefersReducedMotion() {
@@ -37,7 +38,7 @@ function useInView(options = {}) {
   return [ref, inView];
 }
 
-/* ─── Count-up hook (for match % and stats) ──────────────────────────── */
+/* ─── Count-up hook (for match demo) ─────────────────────────────────── */
 function useCountUp(target, duration = 1200, active = false, reduced = false) {
   const [value, setValue] = useState(reduced ? target : 0);
   useEffect(() => {
@@ -46,7 +47,6 @@ function useCountUp(target, duration = 1200, active = false, reduced = false) {
     const step = ts => {
       if (!start) start = ts;
       const progress = Math.min((ts - start) / duration, 1);
-      // ease-out-back for the lock-in feel
       const ease = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(ease * target));
       if (progress < 1) requestAnimationFrame(step);
@@ -56,15 +56,92 @@ function useCountUp(target, duration = 1200, active = false, reduced = false) {
   return value;
 }
 
-/* ─── Collage item data ───────────────────────────────────────────────── */
-const COLLAGE_ITEMS = [
-  { id: 'c1', status: 'lost',  name: 'Black JBL Headphones',     location: 'Metro Plaza, Gate 3', time: '2h ago',  matchPct: null,  color: '#2B2B2B', rotate: '-2deg',  zIndex: 3 },
-  { id: 'c2', status: 'found', name: 'Silver MacBook Charger',   location: 'Central Library, 2F', time: '45m ago', matchPct: '91%', color: '#A8A8A8', rotate: '2.5deg', zIndex: 4 },
-  { id: 'c3', status: 'lost',  name: 'Tan Leather Wallet',       location: 'Noodle Bar, Sec 14',  time: '5h ago',  matchPct: null,  color: '#B5895A', rotate: '-1.5deg',zIndex: 2 },
-  { id: 'c4', status: 'found', name: 'AirPods Pro (White)',       location: 'Bus Stop 47B',        time: '1h ago',  matchPct: '87%', color: '#EBEBEB', rotate: '3deg',   zIndex: 5 },
-  { id: 'c5', status: 'lost',  name: 'Navy Blue Umbrella',       location: 'Rajiv Chowk Stn.',    time: '3h ago',  matchPct: null,  color: '#1B3A6B', rotate: '-3.5deg',zIndex: 1 },
-  { id: 'c6', status: 'found', name: 'Red Fossil Watch',         location: 'Gym, DLF CyberHub',   time: '30m ago', matchPct: '94%', color: '#C0302A', rotate: '1.5deg', zIndex: 6 },
-  { id: 'c7', status: 'lost',  name: 'Brown Leather Backpack',   location: 'Saket PVR',            time: '21h ago', matchPct: null,  color: '#7A4E2D', rotate: '-0.5deg',zIndex: 2 },
+/* ─── MIT Bengaluru Campus Items Visual Showcase ─────────────────────── */
+const CAMPUS_COLLAGE_ITEMS = [
+  {
+    id: 'c1',
+    status: 'lost',
+    name: 'Black JBL Headphones',
+    location: 'AB1 Central Library, 2F',
+    time: '2h ago',
+    matchPct: null,
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80',
+    color: '#2B2B2B',
+    rotate: '-2.5deg',
+    zIndex: 3
+  },
+  {
+    id: 'c2',
+    status: 'found',
+    name: 'Silver MacBook Charger',
+    location: 'Food Court, AB2',
+    time: '45m ago',
+    matchPct: '94%',
+    image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&q=80',
+    color: '#A8A8A8',
+    rotate: '2.5deg',
+    zIndex: 4
+  },
+  {
+    id: 'c3',
+    status: 'lost',
+    name: 'Student ID & Key Lanyard',
+    location: 'Hostel Block 3 Ground Floor',
+    time: '3h ago',
+    matchPct: null,
+    image: 'https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?w=400&q=80',
+    color: '#1B3A6B',
+    rotate: '-1.5deg',
+    zIndex: 2
+  },
+  {
+    id: 'c4',
+    status: 'found',
+    name: 'AirPods Pro Case',
+    location: 'Innovation Lab 4',
+    time: '1h ago',
+    matchPct: '89%',
+    image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&q=80',
+    color: '#EBEBEB',
+    rotate: '3deg',
+    zIndex: 5
+  },
+  {
+    id: 'c5',
+    status: 'lost',
+    name: 'Casio Scientific Calculator',
+    location: 'AB1 Room 304',
+    time: '5h ago',
+    matchPct: null,
+    image: 'https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?w=400&q=80',
+    color: '#4A5568',
+    rotate: '-3deg',
+    zIndex: 1
+  },
+  {
+    id: 'c6',
+    status: 'found',
+    name: 'Matte Black Water Bottle',
+    location: 'Sports Arena Court 1',
+    time: '30m ago',
+    matchPct: '91%',
+    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80',
+    color: '#1A202C',
+    rotate: '1.5deg',
+    zIndex: 6
+  },
+  {
+    id: 'c7',
+    status: 'lost',
+    name: 'Brown Leather Backpack',
+    location: 'Student Activity Center',
+    time: 'Yesterday',
+    matchPct: null,
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&q=80',
+    color: '#7A4E2D',
+    rotate: '-0.5deg',
+    zIndex: 2
+  },
 ];
 
 /* ─── Corkboard positions ─────────────────────────────────────────────── */
@@ -78,21 +155,10 @@ const POSITIONS = [
   { bottom: '4%', left: '47%'},
 ];
 
-/* ─── Feed items ──────────────────────────────────────────────────────── */
-const FEED_ITEMS = [
-  { id: 'f1', status: 'lost',  name: 'Keys (Honda Civic keychain)',  location: 'Connaught Place',   time: '08:24', date: 'Today',     itemId: 'FI-2841' },
-  { id: 'f2', status: 'found', name: 'Blue Passport Holder',          location: 'T3 Departures',     time: '07:58', date: 'Today',     itemId: 'FI-2839', match: '96%' },
-  { id: 'f3', status: 'lost',  name: 'Canon EOS Camera Bag',         location: 'Lodhi Garden',       time: '06:15', date: 'Today',     itemId: 'FI-2837' },
-  { id: 'f4', status: 'found', name: 'Kindle Paperwhite',             location: 'IndiGo Flt 6E-401', time: '22:30', date: 'Yesterday', itemId: 'FI-2835', match: '88%' },
-  { id: 'f5', status: 'lost',  name: 'Brown Leather Backpack',        location: 'Saket PVR',          time: '21:00', date: 'Yesterday', itemId: 'FI-2833' },
-  { id: 'f6', status: 'found', name: 'iPhone 15 Pro (black case)',     location: 'Hauz Khas Village',  time: '19:45', date: 'Yesterday', itemId: 'FI-2831', match: '92%' },
-];
-
 /* ─── Collage Tag ─────────────────────────────────────────────────────── */
 function CollageTag({ item, position, delay, animated, reduced }) {
   const [stamping, setStamping] = useState(false);
 
-  const springClass = animated && !reduced ? 'anim-hidden' : '';
   const springStyle = animated && !reduced ? {
     transform: `rotate(${item.rotate})`,
     animation: `spring-land 600ms cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms forwards`,
@@ -109,8 +175,13 @@ function CollageTag({ item, position, delay, animated, reduced }) {
 
   return (
     <div
-      className={`absolute ${springClass}`}
-      style={{ ...position, zIndex: item.zIndex }}
+      className="absolute"
+      style={{
+        ...position,
+        zIndex: item.zIndex,
+        opacity: animated || reduced ? 1 : 0,
+        transition: reduced ? 'none' : 'opacity 300ms ease',
+      }}
     >
       <div
         className="claim-tag w-44"
@@ -135,26 +206,35 @@ function CollageTag({ item, position, delay, animated, reduced }) {
       >
         <div className={`claim-tag-strip ${item.status}`} />
         <div className="px-3 pb-3">
-          {/* Color swatch — item photo stand-in */}
+          {/* Photo thumbnail */}
           <div
-            className="w-full h-24 rounded-lg mb-2.5 relative overflow-hidden"
+            className="w-full h-24 rounded-lg mb-2.5 relative overflow-hidden bg-surface flex items-center justify-center"
             style={{ backgroundColor: item.color }}
           >
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                background: `linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%)`,
-              }}
-            />
+            {item.image ? (
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  background: `linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%)`,
+                }}
+              />
+            )}
           </div>
           <span className={item.status === 'lost' ? 'badge-lost' : 'badge-found'}>
             {item.status}
           </span>
-          <p className="mt-1.5 text-xs font-semibold leading-tight" style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-ink)' }}>
+          <p className="mt-1.5 text-xs font-semibold leading-tight line-clamp-1" style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-ink)' }}>
             {item.name}
           </p>
-          <p className="meta-label mt-1.5 flex items-center gap-1" style={{ fontSize: '9px' }}>
-            <MapPin size={8} /> {item.location}
+          <p className="meta-label mt-1.5 flex items-center gap-1 truncate" style={{ fontSize: '9px' }}>
+            <MapPin size={8} className="shrink-0" /> {item.location}
           </p>
           <div className="flex items-center justify-between mt-1">
             <span className="meta-label" style={{ fontSize: '9px' }}>{item.time}</span>
@@ -170,16 +250,21 @@ function CollageTag({ item, position, delay, animated, reduced }) {
   );
 }
 
-/* ─── Feed Row ────────────────────────────────────────────────────────── */
-function FeedRow({ item, index, inView, reduced }) {
+/* ─── Real Feed Row ───────────────────────────────────────────────────── */
+function RealFeedRow({ item, index, inView, reduced }) {
   const cls = inView && !reduced ? `anim-row-in` : '';
   const style = inView && !reduced
     ? { animationDelay: `${index * 50}ms` }
     : (reduced ? { opacity: 1 } : { opacity: 0 });
 
+  const isLost = (item.type || '').toUpperCase() === 'LOST';
+  const displayDate = item.date
+    ? new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : 'Recent';
+
   return (
     <Link
-      to={`/explore`}
+      to={`/item/${item._id || item.id}`}
       className={`group flex items-start gap-4 py-4 border-b transition-colors ${cls}`}
       style={{
         borderColor: 'var(--color-border)',
@@ -190,14 +275,22 @@ function FeedRow({ item, index, inView, reduced }) {
     >
       <div
         className="w-1 self-stretch rounded-full shrink-0 mt-0.5"
-        style={{ backgroundColor: item.status === 'lost' ? 'var(--color-lost)' : 'var(--color-found)' }}
+        style={{ backgroundColor: isLost ? 'var(--color-lost)' : 'var(--color-found)' }}
       />
+      {/* Thumbnail */}
+      {item.image && (
+        <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-surface border border-border">
+          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <span className={item.status === 'lost' ? 'badge-lost' : 'badge-found'}>{item.status}</span>
-            <p className="mt-1.5 text-sm font-semibold leading-snug" style={{ color: 'var(--color-ink)' }}>
-              {item.name}
+            <span className={isLost ? 'badge-lost' : 'badge-found'}>
+              {isLost ? 'lost' : 'found'}
+            </span>
+            <p className="mt-1.5 text-sm font-semibold leading-snug truncate" style={{ color: 'var(--color-ink)' }}>
+              {item.title}
             </p>
           </div>
           <ArrowUpRight
@@ -208,13 +301,8 @@ function FeedRow({ item, index, inView, reduced }) {
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="meta-label flex items-center gap-1"><MapPin size={9} />{item.location}</span>
-          <span className="meta-label flex items-center gap-1"><Clock size={9} />{item.date} · {item.time}</span>
-          <span className="meta-label">{item.itemId}</span>
-          {item.match && (
-            <span className="font-mono text-[10px] font-semibold" style={{ color: 'var(--color-found)' }}>
-              {item.match} match
-            </span>
-          )}
+          <span className="meta-label flex items-center gap-1"><Clock size={9} />{displayDate}</span>
+          <span className="meta-label">{item.category}</span>
         </div>
       </div>
     </Link>
@@ -261,15 +349,15 @@ function MatchShowcase({ reduced }) {
               Visual + semantic.<br />
               <span style={{ fontWeight: 300 }}>Not just keyword search.</span>
             </h2>
-            <p className="text-sm leading-relaxed mb-8" style={{ color: 'var(--color-muted)', maxWidth: '360px' }}>
-              FindIt compares photos, brands, colors, and locations — then gives you a confidence percentage, not a vague list.
+            <p className="text-sm leading-relaxed mb-8" style={{ color: 'var(--color-muted)', maxWidth: '380px' }}>
+              FindIt compares photos, brands, colors, and campus locations — then provides a real confidence score for MIT Bengaluru reports.
             </p>
 
             {[
               { label: 'Visual appearance', pct: 97 },
               { label: 'Brand & model',     pct: 100 },
               { label: 'Color match',       pct: 94 },
-              { label: 'Location overlap',  pct: 82 },
+              { label: 'Campus location match', pct: 88 },
             ].map((f, i) => (
               <div key={f.label} className="mb-4">
                 <div className="flex justify-between mb-1">
@@ -302,12 +390,16 @@ function MatchShowcase({ reduced }) {
             >
               <div className="claim-tag-strip lost" />
               <div className="px-5 pb-5">
-                <div className="w-full h-20 rounded-lg mb-3 flex items-center justify-center" style={{ backgroundColor: '#1A1A2E' }}>
-                  <span className="font-mono text-xs font-semibold tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>ITEM PHOTO</span>
+                <div className="w-full h-28 rounded-lg mb-3 overflow-hidden bg-surface border border-border flex items-center justify-center">
+                  <img
+                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"
+                    alt="Black JBL Headphones"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <span className="badge-lost">Lost · FI-2841</span>
+                <span className="badge-lost">Lost · Campus Report</span>
                 <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--color-ink)' }}>Black JBL Headphones (Over-ear)</p>
-                <p className="meta-label mt-1 flex items-center gap-1"><MapPin size={9} /> Metro Plaza · Reported 08:14</p>
+                <p className="meta-label mt-1 flex items-center gap-1"><MapPin size={9} /> AB1 Central Library · Reported 08:14</p>
               </div>
             </div>
 
@@ -384,12 +476,16 @@ function MatchShowcase({ reduced }) {
             >
               <div className="claim-tag-strip found" />
               <div className="px-5 pb-5">
-                <div className="w-full h-20 rounded-lg mb-3 flex items-center justify-center" style={{ backgroundColor: '#1A1A2E' }}>
-                  <span className="font-mono text-xs font-semibold tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>ITEM PHOTO</span>
+                <div className="w-full h-28 rounded-lg mb-3 overflow-hidden bg-surface border border-border flex items-center justify-center">
+                  <img
+                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"
+                    alt="JBL Tune Foldable"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <span className="badge-found">Found · FI-2839</span>
+                <span className="badge-found">Found · Campus Report</span>
                 <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--color-ink)' }}>JBL Tune 660NC · Foldable, Black</p>
-                <p className="meta-label mt-1 flex items-center gap-1"><MapPin size={9} /> Central Terminal · Found 09:02</p>
+                <p className="meta-label mt-1 flex items-center gap-1"><MapPin size={9} /> Food Court AB2 · Found 09:02</p>
               </div>
             </div>
 
@@ -407,6 +503,8 @@ export default function Home() {
   const reduced = usePrefersReducedMotion();
   const [heroReady, setHeroReady] = useState(false);
   const [feedRef, feedInView] = useInView({ threshold: 0.1 });
+  const [realItems, setRealItems] = useState([]);
+  const [loadingItems, setLoadingItems] = useState(true);
 
   // Hero load sequence fires 80ms after mount
   useEffect(() => {
@@ -414,9 +512,22 @@ export default function Home() {
     return () => clearTimeout(t);
   }, []);
 
-  // Stats count-up — only triggers once hero is ready
-  const stat1 = useCountUp(1247, 1400, heroReady, reduced);
-  const stat2 = useCountUp(342,  1000, heroReady, reduced);
+  // Fetch real items from database/service for the live reports feed
+  useEffect(() => {
+    setLoadingItems(true);
+    getItems()
+      .then(items => {
+        if (Array.isArray(items)) {
+          setRealItems(items.slice(0, 6));
+        }
+      })
+      .catch(err => {
+        console.warn('Real items fetch warning:', err);
+      })
+      .finally(() => {
+        setLoadingItems(false);
+      });
+  }, []);
 
   return (
     <div style={{ fontFamily: 'var(--font-sans)' }}>
@@ -428,10 +539,10 @@ export default function Home() {
         className="relative overflow-hidden"
         style={{ borderBottom: '1px solid var(--color-border)', minHeight: '90vh' }}
       >
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 flex flex-col lg:flex-row items-start gap-0 pt-20 pb-0">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 flex flex-col lg:flex-row items-start gap-0 pt-16 pb-0">
 
           {/* Left: Headline + CTA */}
-          <div className="flex-1 lg:max-w-[520px] pb-16 lg:pb-24 pt-4 lg:pt-12 z-10 relative">
+          <div className="flex-1 lg:max-w-[540px] pb-16 lg:pb-24 pt-4 lg:pt-8 z-10 relative">
 
             {/* Eyebrow — fade up */}
             <p
@@ -442,7 +553,7 @@ export default function Home() {
               }}
             >
               <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-found)' }} />
-              Public Lost &amp; Found · India
+              MIT Bengaluru Campus · Lost &amp; Found
             </p>
 
             {/* HEADLINE — two parts, different animations */}
@@ -486,7 +597,7 @@ export default function Home() {
 
             {/* Subtext */}
             <p
-              className={`mb-10 max-w-sm leading-relaxed ${heroReady && !reduced ? 'anim-fade-up' : ''}`}
+              className={`mb-10 max-w-md leading-relaxed ${heroReady && !reduced ? 'anim-fade-up' : ''}`}
               style={{
                 fontSize: '16px',
                 color: 'var(--color-muted)',
@@ -495,7 +606,7 @@ export default function Home() {
                 animationDelay: '640ms',
               }}
             >
-              AI cross-matches lost and found reports across India. Upload a photo, get a match in minutes.
+              MIT Bengaluru's dedicated lost &amp; found network. Report lost belongings, register found items, and reconnect with fellow students quickly.
             </p>
 
             {/* CTAs */}
@@ -519,34 +630,40 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Stats */}
+            {/* Value Highlights (Non-fake badges) */}
             <div
-              className={`flex flex-wrap gap-6 mt-12 pt-8 ${heroReady && !reduced ? 'anim-count' : ''}`}
+              className={`grid grid-cols-3 gap-4 mt-12 pt-8 ${heroReady && !reduced ? 'anim-count' : ''}`}
               style={{
                 borderTop: '1px solid var(--color-border)',
                 opacity: heroReady || reduced ? 1 : 0,
                 animationDelay: '840ms',
               }}
             >
-              {[
-                { num: stat1.toLocaleString(), label: 'items reported' },
-                { num: stat2.toLocaleString(), label: 'reunited' },
-                { num: '94%',                  label: 'match accuracy' },
-              ].map(s => (
-                <div key={s.label}>
-                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '22px', fontWeight: 600, color: 'var(--color-ink)', lineHeight: 1 }}>
-                    {s.num}
-                  </p>
-                  <p className="meta-label mt-1">{s.label}</p>
-                </div>
-              ))}
+              <div>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: 'var(--color-ink)', lineHeight: 1.2 }}>
+                  MIT Bengaluru
+                </p>
+                <p className="meta-label mt-1 text-[11px]">Campus Hub</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: 'var(--color-ink)', lineHeight: 1.2 }}>
+                  Visual AI
+                </p>
+                <p className="meta-label mt-1 text-[11px]">Smart Matching</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: 'var(--color-ink)', lineHeight: 1.2 }}>
+                  Secure Return
+                </p>
+                <p className="meta-label mt-1 text-[11px]">Verified Handoff</p>
+              </div>
             </div>
           </div>
 
-          {/* Right: Corkboard collage */}
+          {/* Right: Corkboard collage with photos & campus spots */}
           <div
             className="hidden lg:block relative flex-1 self-stretch overflow-visible"
-            style={{ minHeight: '600px' }}
+            style={{ minHeight: '620px' }}
           >
             {/* Cork panel */}
             <div
@@ -559,12 +676,12 @@ export default function Home() {
             />
             {/* Cards */}
             <div className="absolute inset-0">
-              {COLLAGE_ITEMS.map((item, i) => (
+              {CAMPUS_COLLAGE_ITEMS.map((item, i) => (
                 <CollageTag
                   key={item.id}
                   item={item}
                   position={POSITIONS[i] || { top: '50%', left: '50%' }}
-                  delay={reduced ? 0 : 600 + i * 55}
+                  delay={reduced ? 0 : 400 + i * 65}
                   animated={heroReady}
                   reduced={reduced}
                 />
@@ -574,16 +691,18 @@ export default function Home() {
         </div>
 
         {/* Mobile: horizontal scroll strip */}
-        <div className="lg:hidden overflow-x-auto pb-6 px-6 flex gap-3 mt-6" style={{ scrollbarWidth: 'none' }}>
-          {COLLAGE_ITEMS.map((item, i) => (
+        <div className="lg:hidden overflow-x-auto pb-6 px-6 flex gap-3 mt-4" style={{ scrollbarWidth: 'none' }}>
+          {CAMPUS_COLLAGE_ITEMS.map((item) => (
             <div key={item.id} className="shrink-0">
               <div className="claim-tag w-44">
                 <div className={`claim-tag-strip ${item.status}`} />
                 <div className="px-3 pb-3">
-                  <div className="w-full h-20 rounded-lg mb-2.5" style={{ backgroundColor: item.color }} />
+                  <div className="w-full h-24 rounded-lg mb-2.5 overflow-hidden bg-surface flex items-center justify-center">
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
                   <span className={item.status === 'lost' ? 'badge-lost' : 'badge-found'}>{item.status}</span>
-                  <p className="mt-1.5 text-xs font-semibold" style={{ color: 'var(--color-ink)' }}>{item.name}</p>
-                  <p className="meta-label mt-1" style={{ fontSize: '9px' }}>{item.location}</p>
+                  <p className="mt-1.5 text-xs font-semibold line-clamp-1" style={{ color: 'var(--color-ink)' }}>{item.name}</p>
+                  <p className="meta-label mt-1 truncate" style={{ fontSize: '9px' }}>{item.location}</p>
                 </div>
               </div>
             </div>
@@ -597,11 +716,11 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-6 sm:px-8 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 lg:gap-16">
 
-          {/* Feed */}
+          {/* Real Feed */}
           <div ref={feedRef}>
             <div className="flex items-end justify-between mb-8">
               <div>
-                <p className="meta-label mb-1">Real-time</p>
+                <p className="meta-label mb-1">Campus Activity</p>
                 <h2
                   style={{
                     fontFamily: 'var(--font-display)',
@@ -624,11 +743,43 @@ export default function Home() {
               </Link>
             </div>
 
-            <div>
-              {FEED_ITEMS.map((item, i) => (
-                <FeedRow key={item.id} item={item} index={i} inView={feedInView} reduced={reduced} />
-              ))}
-            </div>
+            {loadingItems ? (
+              <div className="py-12 text-center text-xs text-muted">
+                Loading campus reports…
+              </div>
+            ) : realItems.length > 0 ? (
+              <div>
+                {realItems.map((item, i) => (
+                  <RealFeedRow key={item._id || item.id} item={item} index={i} inView={feedInView} reduced={reduced} />
+                ))}
+              </div>
+            ) : (
+              /* Polished empty state for new platform */
+              <div
+                className="p-8 rounded-2xl border text-center my-4"
+                style={{
+                  backgroundColor: 'var(--color-surface)',
+                  borderColor: 'var(--color-border)',
+                }}
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
+                  style={{ backgroundColor: 'var(--color-canvas)', color: 'var(--color-muted)' }}
+                >
+                  <Sparkles size={20} />
+                </div>
+                <h3 className="text-sm font-bold" style={{ color: 'var(--color-ink)' }}>
+                  No active reports on campus right now
+                </h3>
+                <p className="text-xs mt-1.5 mb-5 max-w-sm mx-auto leading-relaxed" style={{ color: 'var(--color-muted)' }}>
+                  Have you lost or found something at MIT Bengaluru? Report it now to start the matching process.
+                </p>
+                <Link to="/report" className="btn-primary inline-flex text-xs py-2 px-4">
+                  Report First Item
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* How it works — vertical timeline */}
@@ -657,9 +808,9 @@ export default function Home() {
                 style={{ backgroundColor: 'var(--color-border)' }}
               />
               {[
-                { num: '01', title: 'Upload a photo', desc: 'Snap or upload a photo. Our vision engine reads brand, color, and category automatically.' },
-                { num: '02', title: 'AI cross-checks 1,200+ reports', desc: 'We compare your submission against every active report — visually, semantically, and by location.' },
-                { num: '03', title: 'Contact via WhatsApp', desc: "When there's a high-confidence match, connect securely. Answer ownership questions to verify." },
+                { num: '01', title: 'Upload a photo or description', desc: 'Snap or upload a photo. Our vision engine detects brand, color, and distinguishing attributes automatically.' },
+                { num: '02', title: 'AI campus cross-matching', desc: 'We compare your submission against every active campus report at MIT Bengaluru visually and semantically.' },
+                { num: '03', title: 'Direct WhatsApp & verified return', desc: "When a high-confidence match is detected, connect securely and verify ownership questions before handoff." },
               ].map((step, i) => (
                 <div key={step.num} className="flex gap-5 pb-8 last:pb-0">
                   <div
@@ -698,80 +849,112 @@ export default function Home() {
       <MatchShowcase reduced={reduced} />
 
       {/* ================================================================
-          SOCIAL PROOF + FINAL CTA
+          MIT BENGALURU CAMPUS VALUE SECTION (Zero Fake Numbers)
           ================================================================ */}
       <section className="max-w-7xl mx-auto px-6 sm:px-8 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+        <div className="mb-12">
+          <p className="meta-label mb-2">Campus Community</p>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: 'clamp(28px, 3.5vw, 40px)',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.1,
+              color: 'var(--color-ink)',
+            }}
+          >
+            Built for the MIT Bengaluru Community
+          </h2>
+          <p className="text-sm mt-2 max-w-xl leading-relaxed" style={{ color: 'var(--color-muted)' }}>
+            Your campus. Your belongings. One place to find them.
+          </p>
+        </div>
 
-          <div className="lg:col-span-1">
-            <p className="meta-label mb-3">Real people, real returns</p>
-            <h2
-              className="mb-5"
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 700,
-                fontSize: 'clamp(28px, 3.5vw, 40px)',
-                letterSpacing: '-0.03em',
-                lineHeight: 1.1,
-                color: 'var(--color-ink)',
-              }}
-            >
-              Maybe someone already found it.
-            </h2>
-            <p className="text-sm leading-relaxed mb-8" style={{ color: 'var(--color-muted)' }}>
-              342 items reunited with their owners so far this year.
-            </p>
-            <Link to="/report?type=lost" className="btn-primary">
-              Check if it's been found
-              <ArrowRight size={14} />
-            </Link>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          {/* Card 1 */}
+          <div
+            className="p-7 rounded-2xl flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--color-lost-bg)',
+              border: '1px solid rgba(232,137,12,0.2)',
+              transform: 'rotate(-0.8deg)',
+            }}
+          >
+            <div>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{ backgroundColor: 'rgba(232,137,12,0.25)', color: 'var(--color-lost)' }}
+              >
+                <Building size={20} />
+              </div>
+              <h3 className="text-base font-bold mb-2" style={{ color: 'var(--color-ink)' }}>
+                Campus-Wide Coverage
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-ink)', opacity: 0.85 }}>
+                From Academic Blocks (AB1 &amp; AB2) to Central Library, Food Courts, and Hostels — report items wherever you are on campus.
+              </p>
+            </div>
+            <div className="pt-6">
+              <span className="badge-lost">Academic &amp; Hostel Blocks</span>
+            </div>
           </div>
 
-          <div className="lg:col-span-2 flex flex-col sm:flex-row gap-5">
-            <div
-              className="flex-1 p-6 rounded-2xl"
-              style={{
-                backgroundColor: 'var(--color-lost-bg)',
-                border: '1px solid rgba(232,137,12,0.15)',
-                transform: 'rotate(-1deg)',
-              }}
-            >
-              <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--color-ink)', fontStyle: 'italic' }}>
-                "Lost my wallet at the airport with all my cards. Found a match on FindIt in 20 minutes. Got it back the same day."
-              </p>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
-                  style={{ backgroundColor: 'rgba(232,137,12,0.2)', color: 'var(--color-lost)' }}
-                >A</div>
-                <div>
-                  <p className="text-xs font-semibold" style={{ color: 'var(--color-ink)' }}>Arjun S.</p>
-                  <p className="meta-label" style={{ fontSize: '10px' }}>Delhi · Wallet recovered</p>
-                </div>
+          {/* Card 2 */}
+          <div
+            className="p-7 rounded-2xl flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--color-found-bg)',
+              border: '1px solid rgba(27,122,76,0.2)',
+              transform: 'rotate(0.8deg)',
+            }}
+          >
+            <div>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{ backgroundColor: 'rgba(27,122,76,0.25)', color: 'var(--color-found)' }}
+              >
+                <ShieldCheck size={20} />
               </div>
+              <h3 className="text-base font-bold mb-2" style={{ color: 'var(--color-ink)' }}>
+                Anti-Theft Verification
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-ink)', opacity: 0.85 }}>
+                Custom ownership verification questions keep private item details hidden so belongings are only returned to their rightful student owner.
+              </p>
             </div>
+            <div className="pt-6">
+              <span className="badge-found">Verified Claim Protocol</span>
+            </div>
+          </div>
 
-            <div
-              className="flex-1 p-6 rounded-2xl"
-              style={{
-                backgroundColor: 'var(--color-found-bg)',
-                border: '1px solid rgba(27,122,76,0.15)',
-                transform: 'rotate(1.2deg)',
-              }}
-            >
-              <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--color-ink)', fontStyle: 'italic' }}>
-                "Found a bag at the metro and listed it here. The owner contacted me within 2 hours. The verification step made both of us feel safe."
-              </p>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
-                  style={{ backgroundColor: 'rgba(27,122,76,0.2)', color: 'var(--color-found)' }}
-                >P</div>
-                <div>
-                  <p className="text-xs font-semibold" style={{ color: 'var(--color-ink)' }}>Priya M.</p>
-                  <p className="meta-label" style={{ fontSize: '10px' }}>Mumbai · Bag returned</p>
-                </div>
+          {/* Card 3 */}
+          <div
+            className="p-7 rounded-2xl flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              transform: 'rotate(-0.5deg)',
+            }}
+          >
+            <div>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{ backgroundColor: 'var(--color-canvas)', color: 'var(--color-ink)' }}
+              >
+                <MessageCircle size={20} />
               </div>
+              <h3 className="text-base font-bold mb-2" style={{ color: 'var(--color-ink)' }}>
+                Direct Coordination
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
+                Protected WhatsApp links allow finders and owners to coordinate seamless campus handoffs without publicly leaking phone numbers.
+              </p>
+            </div>
+            <div className="pt-6">
+              <Link to="/report" className="text-xs font-semibold text-ink hover:underline inline-flex items-center gap-1">
+                Report an item on campus →
+              </Link>
             </div>
           </div>
         </div>
@@ -780,3 +963,4 @@ export default function Home() {
     </div>
   );
 }
+
