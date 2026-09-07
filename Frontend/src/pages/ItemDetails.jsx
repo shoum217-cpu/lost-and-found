@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, Tag, User, ArrowLeft, ShieldCheck, Sparkles, MessageSquare, AlertTriangle, CheckCircle2, ShieldAlert, Trash2, Check } from 'lucide-react';
+import { MapPin, Calendar, Tag, User, ArrowLeft, ShieldCheck, Sparkles, MessageSquare, AlertTriangle, CheckCircle2, ShieldAlert, Trash2 } from 'lucide-react';
 import { getItemById, deleteItem, resolveItem } from '../services/itemService';
 import { createClaim, requestVerification } from '../services/claimService';
 import { useAuth } from '../context/AuthContext';
 import WhatsAppButton from '../components/WhatsAppButton';
 import VerificationFlow from '../components/VerificationFlow';
 import Button from '../components/Button';
+import { ItemDetailsSkeleton } from '../components/Skeletons';
 
 export default function ItemDetails() {
   const { id } = useParams();
@@ -59,11 +60,11 @@ export default function ItemDetails() {
     setResolveError(null);
     try {
       const res = await resolveItem(item._id || item.id, token);
-      const updatedStatus = res.item?.status || (item.type === 'LOST' ? 'RECOVERED' : 'RESOLVED');
+      const updatedStatus = res?.item?.status || (item.type === 'LOST' ? 'RECOVERED' : 'RESOLVED');
       setItem(prev => ({
         ...prev,
         status: updatedStatus,
-        resolvedAt: res.item?.resolvedAt || new Date().toISOString(),
+        resolvedAt: res?.item?.resolvedAt || new Date().toISOString(),
       }));
       setShowRecoverModal(false);
       setResolveSuccessMessage(
@@ -84,11 +85,11 @@ export default function ItemDetails() {
     setDeleteError(null);
     try {
       await deleteItem(item._id || item.id, token);
-      setShowDeleteModal(false);
       navigate('/dashboard');
     } catch (err) {
       console.error('Failed to delete item:', err);
-      setDeleteError(err.message || 'Failed to delete item. Please try again.');
+      setDeleteError(err.message || 'Failed to delete listing. Please try again.');
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -96,10 +97,11 @@ export default function ItemDetails() {
   const handleClaimSubmit = async (e) => {
     e.preventDefault();
     if (!token) {
-      alert('Please log in or register to claim this item.');
-      navigate('/login');
+      alert('Please sign in or create an account to submit an ownership claim.');
+      navigate(`/login?redirect=/item/${item._id || item.id || id}`);
       return;
     }
+
     try {
       const res = await createClaim(item._id || item.id, claimMessage, token);
       if (res && res.claim) {
@@ -108,27 +110,26 @@ export default function ItemDetails() {
         setShowClaimForm(false);
       }
     } catch (err) {
-      alert('Failed to submit claim.');
+      alert(err.message || 'Failed to submit claim.');
     }
   };
 
   const handleRequestVerification = async () => {
+    if (!activeClaim?._id) {
+      // If no claim is currently open on this screen, direct finder to Dashboard claims
+      navigate('/dashboard');
+      return;
+    }
     try {
-      const claimId = activeClaim?._id || 'demo_claim_id';
-      const res = await requestVerification(claimId, token);
+      const res = await requestVerification(activeClaim._id, token);
       setClaimStatus('VERIFICATION_REQUESTED');
     } catch (err) {
-      alert('Verification request submitted.');
-      setClaimStatus('VERIFICATION_REQUESTED');
+      alert(err.message || 'Verification request could not be sent.');
     }
   };
 
   if (isLoading) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-24 text-center text-zinc-400 text-sm">
-        Loading item specifications…
-      </div>
-    );
+    return <ItemDetailsSkeleton />;
   }
 
   if (!item) {
@@ -136,7 +137,7 @@ export default function ItemDetails() {
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
         <AlertTriangle size={36} className="mx-auto text-zinc-300 dark:text-zinc-700 mb-3" />
         <h2 className="text-base font-bold text-zinc-800 dark:text-zinc-200">Listing not found</h2>
-        <Link to="/search" className="text-xs text-zinc-600 dark:text-zinc-400 hover:underline mt-2 inline-block">
+        <Link to="/explore" className="text-xs text-zinc-600 dark:text-zinc-400 hover:underline mt-2 inline-block">
           ← Return to Browse
         </Link>
       </div>
@@ -148,7 +149,7 @@ export default function ItemDetails() {
       {/* Top Nav */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <Link
-          to="/search"
+          to="/explore"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
         >
           <ArrowLeft size={14} /> Back to Browse
@@ -162,22 +163,6 @@ export default function ItemDetails() {
           View AI Matches
         </Link>
       </div>
-
-      {/* Success Notification Alert */}
-      {resolveSuccessMessage && (
-        <div className="p-4 rounded-2xl mb-6 text-xs bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900 flex items-center justify-between shadow-2xs">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="font-medium">{resolveSuccessMessage}</span>
-          </div>
-          <button
-            onClick={() => setResolveSuccessMessage(null)}
-            className="font-bold opacity-60 hover:opacity-100 ml-4 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       <article className="bg-white dark:bg-[#121215] rounded-3xl border border-zinc-200/90 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col gap-0 mb-8">
         {/* Photo Banner */}
@@ -216,33 +201,10 @@ export default function ItemDetails() {
                 Reported by {item.reporterName || item.reportedBy || 'Community Member'} • {formattedDate}
               </p>
             </div>
-            <span className={`text-xs font-mono font-medium px-3 py-1 rounded-full border capitalize ${
-              isResolved
-                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-bold'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
-            }`}>
+            <span className="text-xs font-mono font-medium px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 capitalize">
               {item.status || 'ACTIVE'}
             </span>
           </div>
-
-          {/* Resolved Notice Banner */}
-          {isResolved && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/70 flex items-start gap-3.5 shadow-2xs">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
-                <CheckCircle2 size={20} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
-                  {isRecovered ? 'Item Recovered by Owner' : 'Item Successfully Resolved & Returned'}
-                </h3>
-                <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5 leading-relaxed">
-                  {isRecovered
-                    ? 'This lost item was marked as recovered by the original reporter and is no longer receiving active claims.'
-                    : 'This found item has been successfully verified, claimed, and returned to its rightful owner.'}
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Description */}
           <div>
@@ -281,8 +243,8 @@ export default function ItemDetails() {
           {/* Interaction & Action Bar */}
           <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-6 flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-3">
-              {/* WhatsApp Button (only active for unresolved listings) */}
-              {item.allowWhatsapp && !isResolved && (
+              {/* WhatsApp Button */}
+              {item.allowWhatsapp && (
                 <WhatsAppButton
                   itemId={item._id || item.id}
                   allowWhatsapp={item.allowWhatsapp}
@@ -290,8 +252,8 @@ export default function ItemDetails() {
                 />
               )}
 
-              {/* Submit a Claim Button (Found Item, Not Resolved) */}
-              {isFound && !isResolved && !claimStatus && (
+              {/* Submit a Claim Button */}
+              {isFound && !claimStatus && !isResolved && (
                 <Button
                   onClick={() => setShowClaimForm(p => !p)}
                   variant="primary"
@@ -333,7 +295,7 @@ export default function ItemDetails() {
               )}
             </div>
 
-            {/* Suspicious Claim Option (Found Item, Unresolved only) */}
+            {/* Suspicious Claim Option (Step 2: Looking Sus) */}
             {isFound && !isResolved && (
               <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div>
@@ -524,4 +486,3 @@ export default function ItemDetails() {
     </div>
   );
 }
-

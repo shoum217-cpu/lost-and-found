@@ -86,6 +86,22 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginWithGoogle = async (googleData) => {
+    setIsLoading(true);
+    try {
+      const data = await authService.loginWithGoogle(googleData);
+      setUser(data);
+      setToken(data.token);
+      localStorage.setItem('findit_user', JSON.stringify(data));
+      localStorage.setItem('findit_token', data.token);
+      return { success: true, user: data };
+    } catch (error) {
+      return { success: false, message: error.message || 'Google authentication failed' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -102,6 +118,7 @@ export function AuthProvider({ children }) {
         isLoading,
         login,
         register,
+        loginWithGoogle,
         logout,
         updateProfile,
       }}

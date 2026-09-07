@@ -96,8 +96,14 @@ export async function createItem(itemData, token) {
     if (res.ok) {
       const data = await res.json();
       return data;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      const error = new Error(errData.message || 'Failed to create item');
+      error.status = res.status;
+      throw error;
     }
   } catch (err) {
+    if (err.status) throw err;
     console.warn('Backend API create error, saving to local store:', err);
   }
 

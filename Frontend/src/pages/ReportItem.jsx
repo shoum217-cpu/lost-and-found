@@ -33,7 +33,7 @@ export default function ReportItem() {
     image: '',
   });
 
-  // Sync form type if URL param changes (e.g. browser back/forward or direct link)
+  // Sync form type if URL param changes
   useEffect(() => {
     const urlType = searchParams.get('type')?.toLowerCase();
     if (urlType === 'found' || urlType === 'lost') {
@@ -129,11 +129,13 @@ export default function ReportItem() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!token) {
-      alert('Please log in or register to submit a report.');
-      navigate('/login');
+      alert('Please sign in to publish your item report so you can track it and receive AI match alerts.');
+      navigate('/login?redirect=/report');
       return;
     }
+
     setIsSubmitting(true);
 
     try {
@@ -146,7 +148,12 @@ export default function ReportItem() {
       const result = await createItem(payload, token);
       setSubmissionResult(result);
     } catch (err) {
-      alert('Error creating item report: ' + (err.message || 'Server error'));
+      if (err.status === 401) {
+        alert('Your session has expired. Please sign in again.');
+        navigate('/login?redirect=/report');
+      } else {
+        alert('Error creating item report: ' + (err.message || 'Server error'));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -258,6 +265,23 @@ export default function ReportItem() {
         </p>
       </div>
 
+      {!user && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 text-amber-900 dark:text-amber-200">
+            <AlertCircle size={18} className="text-amber-600 shrink-0" />
+            <span>
+              <strong>Sign in required to publish:</strong> You can fill out details now, but will be prompted to sign in so you can track your listing and receive match notifications.
+            </span>
+          </div>
+          <Link
+            to="/login?redirect=/report"
+            className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-colors shrink-0"
+          >
+            Sign In
+          </Link>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm p-6 sm:p-8 flex flex-col gap-6">
 
         {/* Type Toggle: LOST / FOUND */}
@@ -268,31 +292,27 @@ export default function ReportItem() {
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              id="report-type-lost-btn"
               onClick={() => handleTypeChange('lost')}
               className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-xs sm:text-sm font-semibold cursor-pointer transition-all ${
                 form.type === 'lost'
-                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-300 ring-2 ring-amber-500/20 shadow-sm'
-                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
+                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-300 ring-2 ring-amber-500/20'
+                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
               }`}
-              aria-pressed={form.type === 'lost'}
             >
-              <span className={`w-2 h-2 rounded-full transition-colors ${form.type === 'lost' ? 'bg-amber-500' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
               I Lost Something
             </button>
 
             <button
               type="button"
-              id="report-type-found-btn"
               onClick={() => handleTypeChange('found')}
               className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-xs sm:text-sm font-semibold cursor-pointer transition-all ${
                 form.type === 'found'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-300 ring-2 ring-emerald-500/20 shadow-sm'
-                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-300 ring-2 ring-emerald-500/20'
+                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
               }`}
-              aria-pressed={form.type === 'found'}
             >
-              <span className={`w-2 h-2 rounded-full transition-colors ${form.type === 'found' ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               I Found Something
             </button>
           </div>
