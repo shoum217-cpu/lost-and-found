@@ -275,8 +275,8 @@ export default function ItemDetails() {
                 </Button>
               )}
 
-              {/* Delete Item Button (Owner of lost item, unresolved) */}
-              {!isFound && isOwner && !isResolved && (
+              {/* Delete Item Button (Owner of lost item) */}
+              {!isFound && isOwner && (
                 <Button
                   onClick={() => setShowDeleteModal(true)}
                   variant="danger"
@@ -290,7 +290,7 @@ export default function ItemDetails() {
               {isResolved && (
                 <div className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
                   <CheckCircle2 size={15} className="text-emerald-600 dark:text-emerald-400" />
-                  <span>Listing Resolved — No Further Actions Required</span>
+                  <span>Listing Resolved</span>
                 </div>
               )}
             </div>
