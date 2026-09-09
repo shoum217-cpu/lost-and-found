@@ -1,429 +1,1253 @@
-# FindIt — Intelligent Lost & Found Platform
+# FindIt
 
-<p align="center">
-  <b>A privacy-first, AI-powered lost and found platform built for college campuses and communities.</b>
-</p>
+### A Smart Lost & Found Platform for Students
 
-<p align="center">
-  <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black">
-  <img alt="Vite" src="https://img.shields.io/badge/Vite-Fast_Build-646CFF?logo=vite&logoColor=white">
-  <img alt="Node.js" src="https://img.shields.io/badge/Node.js-Backend-339933?logo=node.js&logoColor=white">
-  <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-Database-47A248?logo=mongodb&logoColor=white">
-  <img alt="Tailwind CSS" src="https://img.shields.io/badge/TailwindCSS-v4-38B2AC?logo=tailwind-css&logoColor=white">
-  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue">
-</p>
+FindIt is a full-stack Lost & Found web application designed to make it easier for students to report, discover, claim, and recover lost belongings.
+
+Losing an item on a college campus often means relying on WhatsApp groups, asking around, or hoping that someone posts about it. FindIt brings the entire process into one platform where users can report lost or found items, browse listings, submit claims, receive notifications, and manage their activity.
+
+The project was built as a hands-on learning experience to move beyond tutorials and understand what it actually takes to build, connect, debug, and deploy a complete full-stack application.
 
 ---
 
-## Table of Contents
+## Live Demo
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-  - [Smart Item Identification (AI)](#smart-item-identification-ai)
-  - [AI-Powered Matching Engine](#ai-powered-matching-engine)
-  - [7-Step Proof-of-Ownership Flow](#7-step-proof-of-ownership-flow)
-  - [WhatsApp Contact Integration](#whatsapp-contact-integration)
-  - [Activity Heatmap](#activity-heatmap)
-  - [Design System](#design-system)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Environment Variables](#environment-variables)
-  - [Running the App](#running-the-app)
-- [API Reference](#api-reference)
-- [Database Models](#database-models)
-- [Authentication & Security](#authentication--security)
-- [Git Workflow](#git-workflow)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [Known Issues](#known-issues)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
+**Live Website:**
+https://findit-recover.vercel.app/
+
+**GitHub Repository:**
+https://github.com/shoum217-cpu/lost-and-found
 
 ---
 
-## Overview
+# Table of Contents
 
-**FindIt** (internally also referred to as **ReFound**) is a full-stack MERN application designed to solve a problem every college campus faces: lost items rarely make it back to their owners because there's no centralized, trustworthy, and fast way to report and reunite them.
-
-Instead of being a simple classifieds board, FindIt layers in:
-
-- **Computer vision** to auto-tag uploaded item photos (category, brand, color, distinguishing features)
-- **Automated matching** between "I lost this" and "I found this" reports, scored by confidence
-- **A structured ownership-verification flow** so finders don't have to just "trust" a claimant blindly
-- **Privacy-preserving contact** via WhatsApp deep links, so phone numbers are never publicly exposed
-- **A geographic heatmap** so users and campus admins can see where items are most frequently lost/found
-
-The goal is to turn the lost & found process from a slow, informal, trust-based exchange into something structured, fast, and safe for both parties.
-
----
-
-## Key Features
-
-### Smart Item Identification (AI)
-
-When a user uploads a photo of a lost or found item, the app sends the image to an AI vision pipeline (Google Gemini API, with a heuristic fallback when no API key is configured) which extracts:
-
-- **Category** (electronics, apparel, documents, accessories, etc.)
-- **Brand** (when visible/identifiable)
-- **Primary and secondary color**
-- **Item type** (e.g., "wireless earbuds" vs. just "electronics")
-- **Unique features** (scratches, stickers, engravings, case color, etc.)
-
-This reduces the manual effort of filling out a report and standardizes the data used for matching.
-
-### AI-Powered Matching Engine
-
-Every time a new LOST or FOUND report is submitted, it's cross-referenced against the opposite pool of reports. The matching engine produces:
-
-- A **Match Score** (percentage-based confidence)
-- An **itemized attribute breakdown** showing exactly which fields contributed to the score (category match, color match, location proximity, time window, description similarity, etc.)
-- A ranked list of potential matches, so users aren't just shown a single "best guess"
-
-This runs on a hybrid approach: rule-based scoring for structured attributes (category, color, location, time) combined with AI-assisted semantic comparison for free-text descriptions.
-
-### 7-Step Proof-of-Ownership Flow
-
-To prevent false claims, FindIt doesn't let anyone simply say "that's mine" and get contact details. Instead, claims go through a structured verification pipeline:
-
-1. **Potential Match Exploration** — The system surfaces likely matches to the user based on the matching engine's score.
-2. **"Looking Sus" Trigger** — If a finder is unsure about a claimant, they can trigger a formal verification request instead of resolving informally.
-3. **Neutral Claimant Notification** — The claimant receives a professionally-worded, non-accusatory notification that verification is required — no language that presumes bad faith.
-4. **Confidential Verification Questionnaire** — The claimant answers specific questions about the item (details that only the true owner would know) which are never shown to the finder directly.
-5. **AI & Rule-Based Confidence Evaluation** — Answers are scored against the finder's original (private) item details using a combination of rule-based matching and AI evaluation for free-text answers.
-6. **Verified State Notification** — If verification passes, both parties are notified and can proceed to exchange contact info.
-7. **Confidential Failed-Verification Handling** — If verification fails, the claimant is informed without leaking *which* answers were wrong or *what* the correct answers were — preventing claimants from just retrying with corrected guesses.
-
-### WhatsApp Contact Integration
-
-Once two parties are ready to connect (either directly, for low-risk items, or after verification for higher-value items), FindIt generates a **pre-filled WhatsApp deep link** (`wa.me`) with a templated message. This means:
-
-- No phone numbers are ever displayed in the UI
-- Users don't have to manually type out an intro message
-- Communication happens entirely on WhatsApp, outside the platform, once the connection is made
-
-### Activity Heatmap
-
-An interactive **Leaflet-powered map** visualizes lost & found activity density across campus (or whatever geographic scope the deployment covers):
-
-- Filterable by **timeframe**: 24 hours / 7 days / 30 days
-- Filterable by **category**: electronics, documents, apparel, etc.
-- Useful both for individual users (e.g., "where are phones usually found?") and for campus administrators looking to place physical drop-off points strategically
-
-### Design System
-
-FindIt follows a minimal, editorial, "human-designed" aesthetic rather than a generic admin-dashboard look:
-
-- Consistent spacing and typography scale
-- Dark mode support via CSS custom properties + `localStorage` persistence
-- Component-driven UI built with Tailwind CSS v4 utility classes
-- Icons via `lucide-react`
+* [About the Project](#about-the-project)
+* [Problem Statement](#problem-statement)
+* [Features](#features)
+* [Authentication](#authentication)
+* [Item Management](#item-management)
+* [Claim System](#claim-system)
+* [Notifications](#notifications)
+* [AI Features](#ai-features)
+* [Location Features](#location-features)
+* [Tech Stack](#tech-stack)
+* [Project Architecture](#project-architecture)
+* [Project Structure](#project-structure)
+* [Getting Started](#getting-started)
+* [Environment Variables](#environment-variables)
+* [Running the Project](#running-the-project)
+* [Deployment](#deployment)
+* [My Contribution](#my-contribution)
+* [Collaboration](#collaboration)
+* [Challenges](#challenges)
+* [What We Learned](#what-we-learned)
+* [Future Improvements](#future-improvements)
 
 ---
 
-## Tech Stack
+# About the Project
 
-| Layer | Technology |
-|---|---|
-| **Frontend Framework** | React 19 |
-| **Build Tool** | Vite |
-| **Routing** | React Router |
-| **Styling** | Tailwind CSS v4 |
-| **Icons** | Lucide React |
-| **Maps** | Leaflet + React-Leaflet |
-| **Backend Framework** | Node.js + Express.js |
-| **Database** | MongoDB |
-| **ODM** | Mongoose |
-| **Authentication** | JWT (JSON Web Tokens) |
-| **Password Hashing** | Bcrypt / Bcryptjs |
-| **AI Engine** | Google Gemini API (`@google/generative-ai`) with heuristic semantic fallback |
-| **Image Handling** | Multer (uploads) |
+FindIt is a centralized Lost & Found platform built for students.
+
+The application allows users to report items they have lost or found and makes those listings accessible to other users through a simple web interface.
+
+Instead of information being scattered across different messaging groups or social media posts, FindIt provides a dedicated platform for managing lost and found items.
+
+The project includes both frontend and backend functionality, allowing users to interact with a complete system rather than just a static interface.
+
+Some of the core functionality includes:
+
+* User registration and login
+* Google Authentication
+* Secure authentication using JWT
+* Reporting lost items
+* Reporting found items
+* Browsing item listings
+* Viewing item details
+* Uploading item images
+* Claiming items
+* Claim-related notifications
+* User dashboard
+* Location-based functionality
+* AI-powered features
+* Item management
+* Backend API integration
+
+FindIt is fully deployed and accessible online.
 
 ---
 
-## Architecture
+# Problem Statement
 
+Lost items are a common problem on college campuses.
+
+Students often lose items such as:
+
+* ID cards
+* Wallets
+* Earphones
+* Keys
+* Chargers
+* Bags
+* Books
+* Electronic devices
+* Personal belongings
+
+When an item is lost, students usually depend on:
+
+* WhatsApp groups
+* Friends
+* Social media posts
+* Asking around campus
+* Physical Lost & Found offices
+
+This process can be inefficient because information is scattered and difficult to search.
+
+FindIt aims to provide a centralized platform where students can:
+
+1. Report a lost item.
+2. Report an item they have found.
+3. Browse existing listings.
+4. View detailed information.
+5. Submit claims for items.
+6. Receive updates regarding their activity.
+
+The goal is simple:
+
+> Make the process of finding and returning lost belongings easier and more organized.
+
+---
+
+# Features
+
+## User Authentication
+
+FindIt includes a complete authentication system.
+
+Users can:
+
+* Create an account
+* Log in using email and password
+* Sign in using Google
+* Access protected functionality
+* Maintain authenticated sessions
+* Securely interact with the application
+
+Authentication is used to ensure that important actions such as reporting items and managing claims are associated with users.
+
+The authentication system uses secure practices such as:
+
+* Password hashing
+* JWT-based authentication
+* Protected routes
+* Authentication middleware
+* User verification
+
+---
+
+# Google Authentication
+
+FindIt supports Google Sign-In to make the login experience faster and more convenient.
+
+Users can authenticate using their Google account instead of manually creating and managing credentials.
+
+Google Authentication was integrated alongside the traditional authentication system.
+
+This allows the application to support multiple ways for users to access the platform.
+
+---
+
+# Item Management
+
+The core functionality of FindIt revolves around managing Lost and Found listings.
+
+Users can report items that they have:
+
+* Lost
+* Found
+
+Each listing can contain relevant information that helps other users identify the item.
+
+Depending on the item, this may include:
+
+* Item name
+* Description
+* Category
+* Location
+* Images
+* Additional details
+
+Users can browse available listings and view individual item details.
+
+---
+
+## Lost Items
+
+When a user loses an item, they can create a Lost Item report.
+
+The report helps other users identify the item and provides relevant information about where or when it was lost.
+
+---
+
+## Found Items
+
+When a user finds an item, they can create a Found Item report.
+
+Other users who believe the item belongs to them can view the listing and take the appropriate action to claim it.
+
+---
+
+## Item Details
+
+Users can view detailed information about individual items.
+
+This provides more context than simply viewing an item in a list.
+
+The item details page helps users determine whether a particular listing matches the item they lost or found.
+
+---
+
+## Delete Item
+
+Users can manage their listings and remove items that are no longer relevant.
+
+For example, an item can be removed when:
+
+* The owner has recovered it
+* The item is no longer available
+* The listing was created accidentally
+* The user no longer wants the listing to remain active
+
+This helps keep the platform clean and relevant.
+
+---
+
+# Image Uploads
+
+FindIt supports image uploads for Lost and Found listings.
+
+Images can make it significantly easier to identify an item.
+
+For example, instead of describing a backpack only through text, a user can upload an image that helps other users immediately recognize it.
+
+Image functionality improves:
+
+* Item identification
+* Listing quality
+* User experience
+* Claim accuracy
+
+---
+
+# Claim System
+
+FindIt includes functionality that allows users to claim items.
+
+When a user finds an item listed on the platform that they believe belongs to them, they can submit a claim.
+
+The claim system helps connect users who have lost an item with users who have found it.
+
+The functionality includes:
+
+* Submitting claims
+* Receiving claim requests
+* Managing claim activity
+* Viewing claim-related information
+
+This creates a more structured recovery process compared to simply posting messages in a group.
+
+---
+
+# Notifications
+
+FindIt includes notification functionality for important activity.
+
+Users can receive updates related to actions such as:
+
+* Claim activity
+* Claim requests
+* Updates related to their items
+
+Notifications help users stay informed without constantly checking every listing manually.
+
+---
+
+# User Dashboard
+
+The dashboard provides users with a central place to manage their activity.
+
+Users can view information related to:
+
+* Their Lost Item reports
+* Their Found Item reports
+* Claim activity
+* Notifications
+* Account-related actions
+
+The dashboard brings important user activity together in one place.
+
+---
+
+# AI Features
+
+FindIt integrates AI-powered functionality using the Google Gemini API.
+
+AI was included as part of the project to explore how modern AI services can be integrated into a real-world web application.
+
+The Gemini API provides AI capabilities that can enhance the Lost & Found experience and demonstrates how external AI services can be connected to a full-stack application.
+
+The integration involved:
+
+* Connecting the application to the Gemini API
+* Handling API requests
+* Managing API responses
+* Integrating AI functionality with the application
+
+---
+
+# Location Features
+
+Location can play an important role when searching for lost items.
+
+FindIt includes location-based functionality to provide additional context about where an item was lost or found.
+
+Interactive maps are implemented using Leaflet.
+
+This allows location information to be presented in a more visual and useful way.
+
+---
+
+# Tech Stack
+
+FindIt was built using modern web technologies.
+
+| Layer                 | Technology        |
+| --------------------- | ----------------- |
+| Frontend              | React             |
+| Build Tool            | Vite              |
+| Styling               | Tailwind CSS      |
+| Routing               | React Router      |
+| Icons                 | Lucide React      |
+| Backend               | Node.js           |
+| Server Framework      | Express.js        |
+| Database              | MongoDB           |
+| ODM                   | Mongoose          |
+| Authentication        | JWT               |
+| Password Security     | Bcrypt / Bcryptjs |
+| Google Authentication | Google OAuth      |
+| AI                    | Google Gemini API |
+| Maps                  | Leaflet           |
+| React Maps            | React Leaflet     |
+| Deployment            | Vercel            |
+
+---
+
+# Project Architecture
+
+FindIt follows a client-server architecture.
+
+```text id="zixsqz"
+                        USER
+                          │
+                          ▼
+                   ┌─────────────┐
+                   │  FRONTEND   │
+                   │    React    │
+                   │    Vite     │
+                   └──────┬──────┘
+                          │
+                          │ API Requests
+                          ▼
+                   ┌─────────────┐
+                   │   BACKEND   │
+                   │ Node.js     │
+                   │ Express.js  │
+                   └──────┬──────┘
+                          │
+                          ▼
+                   ┌─────────────┐
+                   │   MongoDB   │
+                   │  Database   │
+                   └─────────────┘
 ```
-┌─────────────────┐        HTTPS/JSON        ┌──────────────────┐
-│                  │ ───────────────────────> │                  │
-│   React Frontend │                           │  Express Backend │
-│  (Vite + Tailwind)│ <─────────────────────── │   (Node.js API)  │
-│                  │                           │                  │
-└─────────────────┘                           └───────┬──────────┘
-                                                        │
-                                    ┌───────────────────┼───────────────────┐
-                                    │                   │                   │
-                              ┌─────▼─────┐      ┌──────▼──────┐    ┌───────▼───────┐
-                              │  MongoDB   │      │  Gemini API  │    │  WhatsApp Deep │
-                              │ (Mongoose) │      │ (Vision + NLP)│   │  Link Generator│
-                              └───────────┘      └─────────────┘    └───────────────┘
-```
 
-- The **frontend** is a single-page React application communicating with the backend exclusively via a REST API (`VITE_API_URL`).
-- The **backend** exposes route groups for auth, items, claims, matching, and heatmap data, each backed by a corresponding Mongoose model.
-- The **AI layer** is called server-side (never directly from the client) to keep API keys secure.
-- **JWT tokens** are issued on login/register and stored client-side in `localStorage` (`findit_token`, `findit_user`), then sent as a Bearer token on protected requests.
+The frontend is responsible for:
+
+* User interface
+* Pages
+* Components
+* User interactions
+* API communication
+
+The backend is responsible for:
+
+* API endpoints
+* Authentication
+* Authorization
+* Database operations
+* Business logic
+* Item management
+* Claim functionality
+* Notifications
+
+MongoDB is responsible for storing application data.
 
 ---
 
-## Project Structure
+# Project Structure
 
-```
-Lost and Found/
-├── Backend/
-│   ├── config/
-│   │   └── db.js               # MongoDB connection setup
-│   ├── controllers/             # Business logic for each resource
-│   ├── models/                  # Mongoose schemas (User, Item, Claim, etc.)
-│   ├── routes/                  # Express route definitions
-│   ├── middleware/               # Auth middleware, error handlers, etc.
-│   ├── .env                     # Backend environment variables
-│   └── server.js                # App entry point
+The project is organized into separate frontend and backend directories.
+
+```text id="hl50a5"
+FindIt/
 │
-└── Frontend/
-    ├── src/
-    │   ├── assets/
-    │   ├── components/           # Reusable UI components
-    │   ├── context/              # AuthContext, ThemeContext
-    │   ├── data/
-    │   ├── hooks/
-    │   ├── layouts/
-    │   ├── pages/                # Route-level page components
-    │   └── services/             # API service modules (authService, itemService, aiService, claimService, heatmapService)
-    ├── public/
-    ├── index.html
-    └── vite.config.js
+├── Frontend/
+│   │
+│   ├── src/
+│   │   │
+│   │   ├── components/
+│   │   │   └── Reusable UI components
+│   │   │
+│   │   ├── pages/
+│   │   │   └── Application pages
+│   │   │
+│   │   ├── services/
+│   │   │   └── API communication
+│   │   │
+│   │   ├── assets/
+│   │   │   └── Images and static assets
+│   │   │
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   └── package.json
+│
+│
+├── Backend/
+│   │
+│   ├── config/
+│   │   └── Database configuration
+│   │
+│   ├── controllers/
+│   │   └── Application logic
+│   │
+│   ├── middleware/
+│   │   └── Authentication and custom middleware
+│   │
+│   ├── models/
+│   │   └── MongoDB schemas
+│   │
+│   ├── routes/
+│   │   └── API routes
+│   │
+│   ├── server.js
+│   └── package.json
+│
+└── README.md
 ```
 
 ---
 
-## Getting Started
+# Backend Architecture
 
-### Prerequisites
+The backend follows a structured approach to keep the application organized.
 
-- **Node.js** v18 or higher
-- **npm** (comes with Node.js)
-- **MongoDB** running locally, or a MongoDB Atlas connection string
-- *(Optional)* A **Google Gemini API key** for AI-powered features — the app falls back to heuristic matching if this isn't provided
+## Config
 
-### Installation
+The `config` directory handles configuration such as database connections.
 
-Clone the repository:
+Example:
 
-```bash
+```text id="vtm5qn"
+config/
+└── db.js
+```
+
+---
+
+## Models
+
+Models define how data is structured in MongoDB.
+
+Examples may include:
+
+* User
+* Item
+* Claim
+* Notification
+
+Mongoose is used to define schemas and interact with MongoDB.
+
+---
+
+## Controllers
+
+Controllers contain the main application logic.
+
+They handle operations such as:
+
+* Creating items
+* Fetching items
+* Updating items
+* Deleting items
+* User registration
+* User login
+* Authentication
+* Claims
+* Notifications
+
+---
+
+## Routes
+
+Routes define the API endpoints used by the application.
+
+The frontend communicates with the backend through these routes.
+
+---
+
+## Middleware
+
+Middleware handles operations that occur between incoming requests and the final controller logic.
+
+Examples include:
+
+* Authentication
+* Token verification
+* Request validation
+* Error handling
+
+---
+
+# Getting Started
+
+Follow these steps to run FindIt locally.
+
+---
+
+## 1. Clone the Repository
+
+```bash id="fkvqrv"
 git clone https://github.com/shoum217-cpu/lost-and-found.git
-cd "Lost and Found"
 ```
 
-Install frontend dependencies:
+Navigate to the project directory:
 
-```bash
+```bash id="avqvse"
+cd lost-and-found
+```
+
+---
+
+## 2. Install Frontend Dependencies
+
+Navigate to the frontend directory:
+
+```bash id="vgr3vn"
 cd Frontend
-npm install --legacy-peer-deps
 ```
 
-Install backend dependencies:
+Install dependencies:
 
-```bash
-cd ../Backend
-npm install --legacy-peer-deps
+```bash id="zw4hgo"
+npm install
 ```
 
-> **Note:** `--legacy-peer-deps` is currently required due to peer dependency resolution between React 19 and some third-party packages (e.g., `react-leaflet`).
+---
 
-### Environment Variables
+## 3. Install Backend Dependencies
 
-Create a `.env` file inside `Backend/`:
+Open another terminal and navigate to the backend directory:
 
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
-GEMINI_API_KEY=your_gemini_api_key_optional
-```
-
-Create a `.env` file inside `Frontend/`:
-
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-| Variable | Required | Description |
-|---|---|---|
-| `PORT` | Yes | Port the Express server listens on |
-| `MONGO_URI` | Yes | MongoDB connection string (local or Atlas) |
-| `JWT_SECRET` | Yes | Secret used to sign JWT tokens — use a long, random string |
-| `GEMINI_API_KEY` | No | Enables AI vision identification & smart matching; falls back to heuristic matching if omitted |
-| `VITE_API_URL` | Yes | Base URL the frontend uses to reach the backend API |
-
-### Running the App
-
-Start the backend:
-
-```bash
+```bash id="r4uvky"
 cd Backend
+```
+
+Install dependencies:
+
+```bash id="6d6l2r"
+npm install
+```
+
+---
+
+# Environment Variables
+
+Environment variables are used to store sensitive configuration information.
+
+Create a `.env` file inside the Backend directory.
+
+Example:
+
+```env id="3gw2x9"
+PORT=5000
+
+MONGO_URI=your_mongodb_connection_string
+
+JWT_SECRET=your_jwt_secret
+
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+Depending on your Google Authentication and deployment setup, additional environment variables may be required.
+
+For example:
+
+```env id="efnmzt"
+GOOGLE_CLIENT_ID=your_google_client_id
+```
+
+The frontend may also require environment variables for services configured using Vite.
+
+Example:
+
+```env id="kskmnk"
+VITE_API_URL=your_backend_api_url
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+```
+
+Never upload sensitive environment variables to GitHub.
+
+Make sure your `.env` file is included in `.gitignore`.
+
+---
+
+# Running the Project
+
+## Start the Backend
+
+Navigate to the Backend directory:
+
+```bash id="uovpvy"
+cd Backend
+```
+
+Run:
+
+```bash id="ic6erf"
 npm run dev
 ```
 
-Start the frontend (in a separate terminal):
+The backend should start on the configured port.
 
-```bash
+Example:
+
+```text id="c9g94d"
+Server running on port 5000
+MongoDB Connected
+```
+
+---
+
+## Start the Frontend
+
+Open another terminal.
+
+Navigate to the Frontend directory:
+
+```bash id="a8xh0s"
 cd Frontend
+```
+
+Run:
+
+```bash id="wbmylx"
 npm run dev
 ```
 
-Then open the app at:
+Vite will provide a local URL.
 
-```
-http://localhost:5173
-```
-
-The backend API will be running at:
-
-```
-http://localhost:5000/api
-```
+Open the displayed URL in your browser.
 
 ---
 
-## API Reference
+# API Communication
 
-### Auth
+The frontend communicates with the backend using API requests.
 
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `POST` | `/api/auth/register` | Register a new user | No |
-| `POST` | `/api/auth/login` | Log in and receive a JWT | No |
-| `GET` | `/api/auth/me` | Get current authenticated user's profile | Yes |
+The general flow looks like this:
 
-### Items *(Lost / Found Reports)*
+```text id="zb1cz2"
+User Action
+    │
+    ▼
+Frontend
+    │
+    ▼
+API Request
+    │
+    ▼
+Express Backend
+    │
+    ▼
+Controller
+    │
+    ▼
+MongoDB
+    │
+    ▼
+API Response
+    │
+    ▼
+Frontend Update
+```
 
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `GET` | `/api/items` | List all items (filterable by category, status, location) | No |
-| `POST` | `/api/items` | Create a new lost or found report | Yes |
-| `GET` | `/api/items/:id` | Get details of a specific item | No |
-| `PUT` | `/api/items/:id` | Update an item report | Yes |
-| `DELETE` | `/api/items/:id` | Delete an item report | Yes |
-
-### Matching
-
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `GET` | `/api/items/:id/matches` | Get ranked potential matches for an item | Yes |
-
-### Claims / Ownership Verification
-
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `POST` | `/api/claims` | Initiate a claim on a found item | Yes |
-| `POST` | `/api/claims/:id/verify` | Submit verification questionnaire answers | Yes |
-| `GET` | `/api/claims/:id` | Get claim status | Yes |
-
-### Heatmap
-
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `GET` | `/api/heatmap` | Get aggregated location data for the activity heatmap (supports `timeframe` and `category` query params) | No |
-
-> Exact route names/params may evolve as the project develops — check `Backend/routes/` for the current source of truth.
+This structure allows the frontend and backend to operate independently while communicating through defined APIs.
 
 ---
 
-## Database Models
+# Authentication Flow
 
-**User**
-- `name`, `email`, `password` (hashed via bcrypt), `createdAt`
+FindIt uses secure authentication to protect user functionality.
 
-**Item**
-- `title`, `description`, `category`, `color`, `brand`, `status` (`lost` / `found`), `location` (coordinates), `imageUrl`, `reportedBy` (ref: User), `createdAt`
+The general authentication flow is:
 
-**Claim**
-- `item` (ref: Item), `claimant` (ref: User), `status` (`pending` / `verified` / `rejected`), `verificationAnswers`, `createdAt`
+```text id="b3agwv"
+User
+ │
+ ▼
+Login / Register
+ │
+ ▼
+Backend
+ │
+ ▼
+Verify Credentials
+ │
+ ▼
+Generate JWT
+ │
+ ▼
+Send Token
+ │
+ ▼
+Authenticated User
+```
 
-*(Schema details may be extended over time — see `Backend/models/` for the current implementation.)*
+For protected actions:
 
----
-
-## Authentication & Security
-
-- Passwords are hashed using **bcrypt/bcryptjs** before being stored — plaintext passwords are never persisted.
-- On successful login/register, the backend issues a **JWT**, which the frontend stores in `localStorage` as `findit_token`, alongside basic user info as `findit_user`.
-- Protected routes use middleware that verifies the JWT from the `Authorization: Bearer <token>` header before allowing access.
-- Ownership-verification answers are stored confidentially and are never exposed to the opposing party, whether the claim succeeds or fails.
-- WhatsApp contact is generated as a deep link only — raw phone numbers are never rendered in the frontend DOM.
-
----
-
-## Git Workflow
-
-This project uses a simple two-branch collaboration model:
-
-- **`main-codes`** — the current stable, deployable version
-- **feature branches** (e.g., `garvit-changes`) — used for larger feature work (new UI, AI features, claims flow, heatmap, etc.), merged into `main-codes` via pull request once tested
-
-General flow for contributing:
-
-```bash
-git checkout -b feature/your-feature-name main-codes
-# make changes
-git add .
-git commit -m "Describe your change"
-git push origin feature/your-feature-name
-# open a Pull Request into main-codes
+```text id="0zdhsv"
+User Request
+     │
+     ▼
+JWT Token
+     │
+     ▼
+Authentication Middleware
+     │
+     ▼
+Verify Token
+     │
+     ▼
+Allow Access
 ```
 
 ---
 
-## Roadmap
+# Deployment
 
-- [ ] Push notifications for match alerts
-- [ ] Admin dashboard for campus lost & found offices
-- [ ] Multi-image upload per report
-- [ ] QR-code based drop-off point check-in
-- [ ] Mobile-responsive PWA support
-- [ ] Rate-limiting and abuse prevention on claims
-- [ ] Multi-language support
+FindIt is deployed and publicly accessible.
 
----
+## Live Application
 
-## Known Issues
+https://findit-recover.vercel.app/
 
-- Peer dependency warnings may appear during `npm install` due to React 19 compatibility lag in some packages — use `--legacy-peer-deps`.
-- AI-based matching accuracy depends on `GEMINI_API_KEY` being configured; without it, matching falls back to a simpler heuristic model with reduced accuracy.
+The project deployment involved configuring the application for production and ensuring that the frontend could communicate correctly with the backend services.
 
----
+Deployment also required handling configuration such as:
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch off `main-codes`
-3. Make your changes with clear, descriptive commits
-4. Open a Pull Request describing what changed and why
-5. Ensure the app runs locally without errors before requesting review
+* Environment variables
+* Production URLs
+* API URLs
+* Authentication configuration
+* External service integration
 
 ---
 
-## License
+# My Contribution
 
-This is a personal project built by Shoumil & Garvit and is not currently released under an open-source license. All rights reserved.
+### Shoumil Mandal
+
+I primarily focused on the backend and the core functionality of FindIt.
+
+My work included:
+
+## Backend Development
+
+* Setting up the Node.js backend
+* Building the Express server
+* Creating API endpoints
+* Structuring controllers and routes
+* Implementing backend logic
+* Connecting frontend and backend
 
 ---
 
-## Author
+## Database Integration
 
-Built and maintained by **Shoumil**, a B.Tech CSE student at Manipal Institute of Technology (MIT), Bengaluru.
+* Setting up MongoDB
+* Configuring database connections
+* Creating Mongoose models
+* Managing application data
+* Debugging database issues
+* Working with MongoDB Atlas for deployment
 
-FindIt started as a way to go deeper into full-stack MERN development — backend architecture, authentication, AI integration, and real-world UX problems around trust and verification — while solving an actual problem faced on campus.
+---
 
-- GitHub: [@shoum217-cpu](https://github.com/shoum217-cpu)
-- Project Repo: [lost-and-found](https://github.com/shoum217-cpu/lost-and-found)
+## Authentication
 
-## Acknowledgements
+* User registration
+* User login
+* Password hashing
+* Bcrypt integration
+* JWT implementation
+* Authentication middleware
+* Protected routes
+* Google Authentication integration
 
-- Built as a college project exploring full-stack MERN development, AI integration, and real-world UX problems around trust and verification.
-- AI features powered by the **Google Gemini API**.
-- Map visualization powered by **Leaflet** and **React-Leaflet**.
+Authentication was one of the major areas I worked on while developing the project.
+
+---
+
+## Core Functionality
+
+I also worked on implementing and integrating functionality such as:
+
+* Item APIs
+* Claim functionality
+* Notification functionality
+* Backend logic
+* API integration
+* Data handling
+* Error handling
+* Debugging
+
+---
+
+## Deployment & Debugging
+
+I worked on resolving issues related to:
+
+* Backend configuration
+* Environment variables
+* Database connections
+* API communication
+* Authentication
+* Deployment
+* Git branches
+* Merge conflicts
+* Dependency conflicts
+
+A significant part of building the project involved debugging issues that don't usually appear while following tutorials.
+
+---
+
+# Collaboration
+
+FindIt was built collaboratively.
+
+The project was divided based on the areas we wanted to explore and build.
+
+## Backend & Core Functionality
+
+Handled primarily by:
+
+**Shoumil Mandal**
+
+Responsibilities included:
+
+* Backend development
+* Database integration
+* Authentication
+* Google Sign-In
+* APIs
+* Claims
+* Notifications
+* Core application functionality
+* Backend debugging
+* Deployment integration
+
+---
+
+## Frontend & User Experience
+
+The frontend was developed collaboratively with a focus on:
+
+* User interface
+* Components
+* Pages
+* Layouts
+* Responsive design
+* User experience
+* Frontend functionality
+
+The project required continuous collaboration because frontend and backend systems needed to work together.
+
+---
+
+# Challenges
+
+Building FindIt involved several challenges.
+
+Some of the major challenges included:
+
+## Connecting Frontend and Backend
+
+A frontend interface alone is not enough.
+
+The application needed to communicate with the backend correctly.
+
+This involved:
+
+* API URLs
+* HTTP requests
+* Responses
+* Error handling
+* Data formats
+* CORS configuration
+
+---
+
+## Authentication
+
+Authentication required multiple components to work together correctly.
+
+These included:
+
+* User registration
+* Login
+* Password hashing
+* JWT generation
+* Token verification
+* Protected routes
+* Google Authentication
+
+A small issue in any part of the authentication flow could prevent users from accessing the application correctly.
+
+---
+
+## Database Configuration
+
+Database issues included:
+
+* Connection strings
+* Environment variables
+* Local database setup
+* MongoDB Atlas
+* Data persistence
+* Schema design
+
+---
+
+## Git Collaboration
+
+Since multiple developers worked on the project, Git collaboration was also an important part of development.
+
+Challenges included:
+
+* Multiple branches
+* Fetching remote changes
+* Comparing branches
+* Merge conflicts
+* Selectively bringing frontend changes
+* Maintaining working backend functionality
+
+This was one of the most practical learning experiences during the project.
+
+---
+
+## Deployment
+
+Deploying a project introduces challenges that often do not appear during local development.
+
+Some of these included:
+
+* Environment variables
+* Production URLs
+* API configuration
+* Database access
+* Authentication configuration
+* Deployment errors
+
+Getting the application from a local machine to a publicly accessible website required additional debugging and configuration.
+
+---
+
+# What We Learned
+
+FindIt taught us much more than simply writing code.
+
+## Full-Stack Development
+
+We learned how different parts of an application connect together.
+
+Including:
+
+```text id="sdo9z5"
+Frontend
+   ↓
+API
+   ↓
+Backend
+   ↓
+Database
+```
+
+---
+
+## Authentication
+
+We gained practical experience with:
+
+* JWT
+* Password hashing
+* Protected routes
+* Authentication middleware
+* Google Authentication
+
+---
+
+## Database Development
+
+We learned how to:
+
+* Connect MongoDB
+* Design schemas
+* Store data
+* Retrieve data
+* Update data
+* Delete data
+
+---
+
+## APIs
+
+We gained experience with:
+
+* Creating APIs
+* Consuming APIs
+* API integration
+* Request handling
+* Response handling
+* Error handling
+
+---
+
+## External Services
+
+FindIt involved working with external services such as:
+
+* Google Authentication
+* Gemini API
+* MongoDB Atlas
+* Map services
+
+---
+
+## Deployment
+
+We learned about:
+
+* Production environments
+* Environment variables
+* Deployment configuration
+* Public URLs
+* Production debugging
+
+---
+
+## Git Collaboration
+
+Working on the project collaboratively gave us practical experience with:
+
+* Branches
+* Remote repositories
+* Fetching
+* Comparing changes
+* Merging
+* Resolving conflicts
+* Selective file integration
+
+---
+
+# Future Improvements
+
+FindIt can be expanded further with additional functionality.
+
+Some possible improvements include:
+
+## AI-Based Item Matching
+
+Use AI to automatically compare:
+
+* Lost item descriptions
+* Found item descriptions
+* Images
+* Categories
+
+This could help automatically suggest possible matches.
+
+---
+
+## Advanced Search
+
+Improve search functionality with:
+
+* Categories
+* Locations
+* Dates
+* Keywords
+* Item status
+
+---
+
+## Real-Time Notifications
+
+Add real-time notifications using technologies such as:
+
+* Socket.io
+* WebSockets
+
+This would allow users to receive updates instantly.
+
+---
+
+## Better Claim Verification
+
+Improve the claim system by allowing users to provide additional information to verify ownership.
+
+For example:
+
+* Unique identifying details
+* Description verification
+* Images
+* Additional questions
+
+---
+
+## Item Status
+
+Add clearer item statuses such as:
+
+* Lost
+* Found
+* Claimed
+* Returned
+* Resolved
+
+---
+
+## Campus Integration
+
+Future versions could potentially integrate with:
+
+* College student systems
+* Campus email authentication
+* University Lost & Found departments
+
+---
+
+## Mobile Application
+
+A dedicated mobile application could make FindIt more accessible and convenient for students.
+
+---
+
+# Contributors
+
+## Shoumil Mandal
+
+**Backend & Core Functionality**
+
+* Backend Development
+* Database Integration
+* Authentication
+* Google Authentication
+* APIs
+* JWT
+* Claims
+* Notifications
+* Backend Integration
+* Debugging
+
+GitHub: https://github.com/shoum217-cpu
+
+---
+
+## Frontend Contributor
+
+**Frontend & User Experience**
+
+* UI Development
+* Components
+* Pages
+* Layouts
+* Frontend Integration
+* User Experience
+
+---
+
+# Project Status
+
+**Status: Completed and Deployed**
+
+FindIt is a completed full-stack project built as a hands-on learning experience.
+
+The project evolved from a simple idea into a complete application involving:
+
+* Frontend development
+* Backend development
+* Database integration
+* Authentication
+* Google Sign-In
+* APIs
+* AI integration
+* Image functionality
+* Claims
+* Notifications
+* Maps
+* Deployment
+
+---
+
+# Final Thoughts
+
+FindIt started with a simple question:
+
+**What if students had one place to report and find lost belongings?**
+
+The project began as a way to gain practical experience with technologies we were learning.
+
+Instead of only watching tutorials, we decided to build something real.
+
+That decision introduced us to much more than just writing code.
+
+We dealt with:
+
+* Bugs
+* Failed API requests
+* Authentication issues
+* Database problems
+* Git conflicts
+* Dependency errors
+* Deployment failures
+* Configuration problems
+
+But solving those problems was where most of the learning happened.
+
+FindIt may have started as a simple idea, but turning that idea into a fully functional and deployed application was the real achievement.
+
+---
+
+## Try FindIt
+
+**Live Website:**
+https://findit-recover.vercel.app/
+
+**GitHub Repository:**
+https://github.com/shoum217-cpu/lost-and-found
+
+---
+
+Built with curiosity, collaboration, debugging, and a lot of trial and error.
