@@ -1,63 +1,94 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 
 export default function Login() {
-  const [searchParams] = useSearchParams();
-  const redirectTarget = searchParams.get('redirect') || '/dashboard';
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showGooglePrompt, setShowGooglePrompt] = useState(false);
-  const [googleEmailInput, setGoogleEmailInput] = useState('');
-  const [googleNameInput, setGoogleNameInput] = useState('');
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const tokenClientRef = useRef(null);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  useEffect(() => {
-    // Initialize Google Identity Services if client ID is configured
-    if (googleClientId && typeof window !== 'undefined') {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        if (window.google?.accounts?.id) {
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: handleGoogleCredentialResponse,
-          });
-        }
-      };
-      document.body.appendChild(script);
-      return () => {
-        if (document.body.contains(script)) document.body.removeChild(script);
-      };
+  const handleGoogleTokenResponse = async (tokenResponse) => {
+    if (tokenResponse?.error) {
+      setError('Google sign-in was cancelled or encountered an error.');
+      setIsGoogleLoading(false);
+      return;
     }
-  }, [googleClientId]);
 
-  async function handleGoogleCredentialResponse(response) {
-    setIsGoogleLoading(true);
-    setError('');
-    try {
-      const res = await loginWithGoogle({ credential: response.credential });
-      if (res.success) {
-        navigate(redirectTarget);
-      } else {
-        setError(res.message || 'Google sign-in failed');
+    if (tokenResponse?.access_token) {
+      setIsGoogleLoading(true);
+      setError('');
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+
+        if (!userInfoRes.ok) {
+          throw new Error('Failed to fetch Google account information');
+        }
+
+        const userInfo = await userInfoRes.json();
+        const res = await loginWithGoogle({
+          email: userInfo.email,
+          name: userInfo.name || userInfo.given_name || userInfo.email?.split('@')[0],
+          credential: tokenResponse.access_token,
+        });
+
+        if (res.success) {
+          navigate('/dashboard');
+        } else {
+          setError(res.message || 'Google sign-in failed');
+        }
+      } catch (err) {
+        setError(err.message || 'Google sign-in error occurred');
+      } finally {
+        setIsGoogleLoading(false);
       }
-    } catch (err) {
-      setError(err.message || 'Google sign-in error occurred');
-    } finally {
+    } else {
       setIsGoogleLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const scriptId = 'google-gsi-script';
+      let script = document.getElementById(scriptId);
+
+      const initClient = () => {
+        if (googleClientId && window.google?.accounts?.oauth2) {
+          try {
+            tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+              client_id: googleClientId,
+              scope: 'email profile openid',
+              callback: handleGoogleTokenResponse,
+            });
+          } catch (e) {
+            console.warn('GSI initTokenClient warning:', e);
+          }
+        }
+      };
+
+      if (!script) {
+        script = document.createElement('script');
+        script.id = scriptId;
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = initClient;
+        document.body.appendChild(script);
+      } else if (window.google?.accounts?.oauth2) {
+        initClient();
+      }
+    }
+  }, [googleClientId]);
 
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -71,7 +102,7 @@ export default function Login() {
     const res = await login(form.email, form.password);
     setIsLoading(false);
     if (res.success) {
-      navigate(redirectTarget);
+      navigate('/dashboard');
     } else {
       setError(res.message || 'Invalid email or password');
     }
@@ -79,34 +110,68 @@ export default function Login() {
 
   const handleGoogleClick = () => {
     setError('');
-    if (googleClientId && window.google?.accounts?.id) {
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // If One Tap is skipped or blocked, show direct Google sign in dialog
-          setShowGooglePrompt(true);
-        }
-      });
-    } else {
-      // Direct sign-in prompt for development or when OAuth client ID is pending setup
-      setShowGooglePrompt(true);
+    if (!googleClientId) {
+      setError('Google sign-in is not configured. Missing VITE_GOOGLE_CLIENT_ID.');
+      return;
     }
-  };
-
-  const handleCustomGoogleSubmit = async (e) => {
-    e.preventDefault();
-    if (!googleEmailInput) return;
     setIsGoogleLoading(true);
-    setError('');
-    const res = await loginWithGoogle({
-      email: googleEmailInput,
-      name: googleNameInput || googleEmailInput.split('@')[0],
-    });
-    setIsGoogleLoading(false);
-    if (res.success) {
-      setShowGooglePrompt(false);
-      navigate(redirectTarget);
+
+    if (tokenClientRef.current) {
+      tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
+    } else if (googleClientId && window.google?.accounts?.oauth2) {
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: 'email profile openid',
+        callback: handleGoogleTokenResponse,
+      });
+      tokenClientRef.current = client;
+      client.requestAccessToken({ prompt: 'select_account' });
     } else {
-      setError(res.message || 'Google authentication failed');
+      const redirectUri = window.location.origin;
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+        googleClientId
+      )}&redirect_uri=${encodeURIComponent(
+        redirectUri
+      )}&response_type=token&scope=${encodeURIComponent(
+        'email profile openid'
+      )}&prompt=select_account`;
+
+      const width = 500;
+      const height = 600;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      const popup = window.open(
+        oauthUrl,
+        'google_oauth_login',
+        `width=${width},height=${height},top=${top},left=${left}`
+      );
+
+      if (!popup) {
+        setIsGoogleLoading(false);
+        setError('Popup blocked by browser. Please allow popups for Google sign-in.');
+        return;
+      }
+
+      const checkPopup = setInterval(() => {
+        try {
+          if (!popup || popup.closed) {
+            clearInterval(checkPopup);
+            setIsGoogleLoading(false);
+          } else if (popup.location.href.includes('access_token=')) {
+            const hash = popup.location.hash || popup.location.search;
+            const params = new URLSearchParams(hash.replace('#', '?'));
+            const accessToken = params.get('access_token');
+            popup.close();
+            clearInterval(checkPopup);
+            if (accessToken) {
+              handleGoogleTokenResponse({ access_token: accessToken });
+            }
+          }
+        } catch (e) {
+          // Cross-origin before redirect back
+        }
+      }, 500);
     }
   };
 
@@ -234,49 +299,6 @@ export default function Login() {
             )}
             <span>{isGoogleLoading ? 'Connecting…' : 'Continue with Google'}</span>
           </button>
-
-          {/* Direct Google Sign-In Dialog */}
-          {showGooglePrompt && (
-            <div className="mt-4 p-4 rounded-2xl bg-canvas border border-border shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-ink">Sign in with Google Account</p>
-                <button
-                  type="button"
-                  onClick={() => setShowGooglePrompt(false)}
-                  className="text-xs text-muted hover:text-ink cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-[11px] text-muted mb-3">
-                Enter your Google / Manipal email to sign in or create your account:
-              </p>
-              <form onSubmit={handleCustomGoogleSubmit} className="space-y-2.5">
-                <input
-                  type="email"
-                  required
-                  placeholder="name@learner.manipal.edu or Gmail"
-                  value={googleEmailInput}
-                  onChange={e => setGoogleEmailInput(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-border bg-surface text-ink placeholder:text-muted/65 focus:outline-none focus:ring-2 focus:ring-ink"
-                />
-                <input
-                  type="text"
-                  placeholder="Your Full Name (optional)"
-                  value={googleNameInput}
-                  onChange={e => setGoogleNameInput(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-border bg-surface text-ink placeholder:text-muted/65 focus:outline-none focus:ring-2 focus:ring-ink"
-                />
-                <button
-                  type="submit"
-                  disabled={isGoogleLoading}
-                  className="btn-primary w-full justify-center text-xs py-2"
-                >
-                  {isGoogleLoading ? <Loader2 size={14} className="animate-spin" /> : 'Confirm Google Sign-In'}
-                </button>
-              </form>
-            </div>
-          )}
 
           <p className="text-xs text-center text-muted mt-6 font-body">
             Don't have an account?{' '}
